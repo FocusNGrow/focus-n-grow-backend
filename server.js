@@ -1,25 +1,21 @@
-// ============================================
-// FOCUS N GROW - BACKEND SERVER
-// Main entry point
-// ============================================
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const sequelize = require('./config/database');
+const authRoutes = require('./routes/auth');
 
-// Initialize Express app
 const app = express();
 
-// ============================================
-// MIDDLEWARE (Process every request)
-// ============================================
+app.use(express.json());
+app.use(cors());
 
-app.use(express.json()); // Parse JSON bodies
-app.use(cors()); // Allow frontend requests
-
-// ============================================
-// SIMPLE HEALTH CHECK ENDPOINT
-// ============================================
+sequelize.sync({ alter: true })
+  .then(() => {
+    console.log('✅ SQLite database tables synced');
+  })
+  .catch(err => {
+    console.error('❌ Database sync error:', err);
+  });
 
 app.get('/', (req, res) => {
   res.json({
@@ -30,10 +26,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// ============================================
-// SIMPLE TEST ENDPOINT
-// ============================================
-
 app.get('/api/test', (req, res) => {
   res.json({
     status: 'success',
@@ -43,9 +35,7 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// ============================================
-// ERROR HANDLER (Catch errors)
-// ============================================
+app.use('/api/auth', authRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -56,22 +46,20 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ============================================
-// START SERVER
-// ============================================
-
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`
   ╔════════════════════════════════════════╗
   ║   FOCUS N GROW - BACKEND SERVER        ║
-  ║   Running on port ${PORT}                  ║
-  ║   Environment: ${process.env.NODE_ENV}         ║
+  ║   Running on port 3000                 ║
+  ║   Database: SQLite (Local)             ║
+  ║   Environment: development             ║
   ║                                        ║
-  ║   Test endpoints:                      ║
-  ║   GET http://localhost:${PORT}/            ║
-  ║   GET http://localhost:${PORT}/api/test    ║
+  ║   API Endpoints:                       ║
+  ║   GET  http://localhost:3000/          ║
+  ║   POST http://localhost:3000/api/auth/register
+  ║   POST http://localhost:3000/api/auth/login
   ╚════════════════════════════════════════╝
   `);
 });
