@@ -3,58 +3,68 @@ const express = require('express');
 const cors = require('cors');
 const sequelize = require('./config/database');
 
-// Import models
+// Import ALL models
 const User = require('./models/User');
 const Profile = require('./models/Profile');
 const StudyPlan = require('./models/StudyPlan');
 const StudyPlanItem = require('./models/StudyPlanItem');
 const MoodLog = require('./models/MoodLog');
+const Streak = require('./models/Streak');
+const FocusSession = require('./models/FocusSession');
+const ChatMessage = require('./models/ChatMessage');
 
-// Import routes
+// Import ALL routes
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 const studyRoutes = require('./routes/study');
 const moodRoutes = require('./routes/mood');
+const streakRoutes = require('./routes/streak');
+const timerRoutes = require('./routes/timer');
+const chatRoutes = require('./routes/chat');
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 
-// Sync database
+// Sync ALL tables
 sequelize.sync({ alter: true })
   .then(() => {
-    console.log('✅ SQLite database tables synced');
+    console.log('✅ All database tables synced');
   })
   .catch(err => {
     console.error('❌ Database sync error:', err);
   });
 
-// Routes
+// Health check
 app.get('/', (req, res) => {
   res.json({
     status: 'success',
     message: 'Focus N Grow API is running!',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '1.0.0',
+    endpoints: {
+      auth: '/api/auth',
+      profiles: '/api/profiles',
+      study: '/api/study',
+      mood: '/api/mood',
+      streak: '/api/streak',
+      timer: '/api/timer',
+      chat: '/api/chat',
+    }
   });
 });
 
-app.get('/api/test', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'API is working correctly!',
-    endpoint: '/api/test',
-    method: 'GET'
-  });
-});
-
-// API Routes
+// ALL API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/study', studyRoutes);
 app.use('/api/mood', moodRoutes);
+app.use('/api/streak', streakRoutes);
+app.use('/api/timer', timerRoutes);
+app.use('/api/chat', chatRoutes);
 
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -73,18 +83,15 @@ app.listen(PORT, () => {
   ║   Running on port 3000                 ║
   ║   Database: SQLite (Local)             ║
   ║   Environment: development             ║
-  ║                                        ║
-  ║   API Endpoints:                       ║
-  ║   POST http://localhost:3000/api/auth/register
-  ║   POST http://localhost:3000/api/auth/login
-  ║   POST http://localhost:3000/api/profiles/create
-  ║   GET  http://localhost:3000/api/profiles/:user_id
-  ║   POST http://localhost:3000/api/study/plans/create
-  ║   POST http://localhost:3000/api/study/items/create
-  ║   GET  http://localhost:3000/api/study/tasks/today/:plan_id
-  ║   POST http://localhost:3000/api/mood/log
-  ║   GET  http://localhost:3000/api/mood/history/:user_id
-  ║   GET  http://localhost:3000/api/mood/analysis/:user_id
+  ╠════════════════════════════════════════╣
+  ║   ROUTES ACTIVE:                       ║
+  ║   /api/auth (signup/login)             ║
+  ║   /api/profiles (profile mgmt)         ║
+  ║   /api/study (study plans)             ║
+  ║   /api/mood (mood tracking)            ║
+  ║   /api/streak (streak tracking)        ║
+  ║   /api/timer (focus timer)             ║
+  ║   /api/chat (AI coaching)              ║
   ╚════════════════════════════════════════╝
   `);
 });
