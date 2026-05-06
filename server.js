@@ -12,6 +12,9 @@ const MoodLog = require('./models/MoodLog');
 const Streak = require('./models/Streak');
 const FocusSession = require('./models/FocusSession');
 const ChatMessage = require('./models/ChatMessage');
+const Subject = require('./models/Subject');
+const PersonalGoal = require('./models/PersonalGoal');
+const BiblePlan = require('./models/BiblePlan');
 
 // Import ALL routes
 const authRoutes = require('./routes/auth');
@@ -22,13 +25,15 @@ const streakRoutes = require('./routes/streak');
 const timerRoutes = require('./routes/timer');
 const chatRoutes = require('./routes/chat');
 const subscriptionRoutes = require('./routes/subscription');
+const subjectRoutes = require('./routes/subjects');
+const personalGoalRoutes = require('./routes/personalGoal');
 
 const app = express();
 
 app.use(express.json());
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -47,7 +52,7 @@ app.get('/', (req, res) => {
     status: 'success',
     message: 'Focus N Grow API is running!',
     timestamp: new Date().toISOString(),
-    version: '2.0.0',
+    version: '3.0.0',
     endpoints: {
       auth: '/api/auth',
       profiles: '/api/profiles',
@@ -57,6 +62,8 @@ app.get('/', (req, res) => {
       timer: '/api/timer',
       chat: '/api/chat',
       subscription: '/api/subscription',
+      subjects: '/api/subjects',
+      goals: '/api/goals',
     }
   });
 });
@@ -70,6 +77,8 @@ app.use('/api/streak', streakRoutes);
 app.use('/api/timer', timerRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/subjects', subjectRoutes);
+app.use('/api/goals', personalGoalRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -85,10 +94,9 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`
   ╔════════════════════════════════════════╗
-  ║   FOCUS N GROW - BACKEND SERVER v2.0   ║
+  ║   FOCUS N GROW - BACKEND v3.0          ║
   ║   Running on port 3000                 ║
   ║   Database: SQLite (Local)             ║
-  ║   Environment: development             ║
   ╠════════════════════════════════════════╣
   ║   ALL ROUTES ACTIVE:                   ║
   ║   /api/auth                            ║
@@ -99,6 +107,8 @@ app.listen(PORT, () => {
   ║   /api/timer                           ║
   ║   /api/chat                            ║
   ║   /api/subscription                    ║
+  ║   /api/subjects  (NEW!)                ║
+  ║   /api/goals     (NEW!)                ║
   ╚════════════════════════════════════════╝
   `);
 });
