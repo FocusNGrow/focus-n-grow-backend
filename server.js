@@ -96,7 +96,7 @@ app.listen(PORT, () => {
   ╔════════════════════════════════════════╗
   ║   FOCUS N GROW - BACKEND v3.0          ║
   ║   Running on port 3000                 ║
-  ║   Database: SQLite (Local)             ║
+  ║   Database: Supabase (PostgreSQL)      ║
   ╠════════════════════════════════════════╣
   ║   ALL ROUTES ACTIVE:                   ║
   ║   /api/auth                            ║
@@ -114,3 +114,7 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+const paymentRoutes = require('./routes/payment');
+// ... in routes section:
+app.use('/api/payment', paymentRoutes);

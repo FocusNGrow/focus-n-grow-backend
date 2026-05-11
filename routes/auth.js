@@ -112,5 +112,44 @@ router.post('/login', async (req, res) => {
     });
   }
 });
+// DELETE ACCOUNT
+router.delete('/delete-account', async (req, res) => {
+  try {
+    const { user_id, password } = req.body;
 
+    if (!user_id || !password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'user_id and password required for verification',
+      });
+    }
+
+    const user = await User.findByPk(user_id);
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found',
+      });
+    }
+
+    // Verify password before deletion
+    const isValid = await user.comparePassword(password);
+    if (!isValid) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Incorrect password. Cannot delete account.',
+      });
+    }
+
+    // Delete user data (cascade)
+    await user.destroy();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Account deleted successfully. We\'re sorry to see you go.',
+    });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
 module.exports = router;

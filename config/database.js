@@ -1,15 +1,21 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: process.env.DATABASE_PATH || './database.sqlite',
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  protocol: 'postgres',
   logging: false,
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  },
 });
 
 sequelize.authenticate()
   .then(() => {
-    console.log('✅ SQLite database connected successfully');
+    console.log('✅ Supabase PostgreSQL connected successfully');
   })
   .catch(err => {
     console.error('❌ Database connection error:', err);
