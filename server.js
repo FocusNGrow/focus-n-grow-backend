@@ -27,6 +27,13 @@ const chatRoutes = require('./routes/chat');
 const subscriptionRoutes = require('./routes/subscription');
 const subjectRoutes = require('./routes/subjects');
 const personalGoalRoutes = require('./routes/personalGoal');
+const paymentRoutes      = require('./routes/payment');
+const passwordResetRoutes = require('./routes/passwordReset');
+const legalRoutes        = require('./routes/legal');
+const syncRoutes         = require('./routes/sync');
+const opayRoutes         = require('./routes/opay');
+const palmPayRoutes      = require('./routes/palmpay');
+const airtimeRoutes      = require('./routes/airtime');
 
 const app = express();
 
@@ -34,7 +41,7 @@ app.use(express.json());
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // Sync ALL tables
@@ -52,19 +59,8 @@ app.get('/', (req, res) => {
     status: 'success',
     message: 'Focus N Grow API is running!',
     timestamp: new Date().toISOString(),
-    version: '3.0.0',
-    endpoints: {
-      auth: '/api/auth',
-      profiles: '/api/profiles',
-      study: '/api/study',
-      mood: '/api/mood',
-      streak: '/api/streak',
-      timer: '/api/timer',
-      chat: '/api/chat',
-      subscription: '/api/subscription',
-      subjects: '/api/subjects',
-      goals: '/api/goals',
-    }
+    version: '2.0.0',
+    database: 'Supabase PostgreSQL ✅',
   });
 });
 
@@ -79,13 +75,20 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/goals', personalGoalRoutes);
+app.use('/api/payment',        paymentRoutes);
+app.use('/api/password-reset', passwordResetRoutes);
+app.use('/api/legal',          legalRoutes);
+app.use('/api/sync',           syncRoutes);
+app.use('/api/payment',        opayRoutes);
+app.use('/api/payment',        palmPayRoutes);
+app.use('/api/airtime',        airtimeRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     status: 'error',
     message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
+    error: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred',
   });
 });
 
@@ -94,27 +97,17 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`
   ╔════════════════════════════════════════╗
-  ║   FOCUS N GROW - BACKEND v3.0          ║
-  ║   Running on port 3000                 ║
-  ║   Database: Supabase (PostgreSQL)      ║
+  ║   FOCUS N GROW - BACKEND v2.0          ║
+  ║   Running on port ${PORT}                  ║
+  ║   Database: Supabase PostgreSQL        ║
   ╠════════════════════════════════════════╣
-  ║   ALL ROUTES ACTIVE:                   ║
-  ║   /api/auth                            ║
-  ║   /api/profiles                        ║
-  ║   /api/study                           ║
-  ║   /api/mood                            ║
-  ║   /api/streak                          ║
-  ║   /api/timer                           ║
-  ║   /api/chat                            ║
-  ║   /api/subscription                    ║
-  ║   /api/subjects  (NEW!)                ║
-  ║   /api/goals     (NEW!)                ║
+  ║   /api/auth        /api/subjects       ║
+  ║   /api/profiles    /api/goals          ║
+  ║   /api/study       /api/streak         ║
+  ║   /api/mood        /api/timer          ║
+  ║   /api/chat        /api/subscription   ║
   ╚════════════════════════════════════════╝
   `);
 });
 
 module.exports = app;
-
-const paymentRoutes = require('./routes/payment');
-// ... in routes section:
-app.use('/api/payment', paymentRoutes);
