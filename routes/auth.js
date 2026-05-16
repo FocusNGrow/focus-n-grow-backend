@@ -44,4 +44,26 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// Save FCM token for push notifications
+router.post('/fcm-token', async (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
+ 
+    const jwt = require('jsonwebtoken');
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id || decoded.userId;
+ 
+    const { fcm_token } = req.body;
+    if (!fcm_token) return res.status(400).json({ error: 'FCM token required' });
+ 
+    await User.update({ fcm_token }, { where: { id: userId } });
+ 
+    res.json({ status: 'success', message: 'FCM token saved' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

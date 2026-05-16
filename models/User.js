@@ -52,6 +52,9 @@ const User = sequelize.define('User', {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
   },
+  fcm_token: { 
+    type: DataTypes.STRING,
+    allowNull: true },
 }, {
   tableName: 'users',
   timestamps: true,
