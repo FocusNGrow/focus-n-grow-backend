@@ -36,7 +36,7 @@ router.get('/today', async (req, res) => {
     if (hour >= 12 && hour < 17) timeOfDay = 'afternoon';
     else if (hour >= 17) timeOfDay = 'evening';
 
-    const prompt = `You are Zara, an AI study coach for Nigerian students.
+    const prompt = `You are Bella-Thalia, an AI study coach for Nigerian students.
 Generate a SHORT, warm, motivating ${timeOfDay} greeting for a student.
 Requirements:
 - Maximum 2 sentences
@@ -72,7 +72,7 @@ Output the greeting text only.`;
         "Champion, today is your day to push beyond your limits! Every page you read brings you closer to your goals. 📚",
         "Your future self will thank you for the work you put in today. Let's make every minute count! 🔥",
         "Big dreams require consistent daily action — open those books and let's build something great! ✨",
-        "Zara believes in you! Today's effort is tomorrow's success story. 💪",
+        "Bella-Thalia believes in you! Today's effort is tomorrow's success story. 💪",
         "Rise and shine! Your WAEC/JAMB result is being written right now by your daily choices. 🎯",
       ];
       greeting = fallbacks[Math.floor(Math.random() * fallbacks.length)];
