@@ -34,6 +34,7 @@ const syncRoutes         = require('./routes/sync');
 const opayRoutes         = require('./routes/opay');
 const palmPayRoutes      = require('./routes/palmpay');
 const airtimeRoutes      = require('./routes/airtime');
+const schoolRoutes = require('./routes/school');
 const greetingRoutes = require('./routes/greeting');
 
 const app = express();
@@ -83,6 +84,7 @@ app.use('/api/sync',           syncRoutes);
 app.use('/api/payment',        opayRoutes);
 app.use('/api/payment',        palmPayRoutes);
 app.use('/api/airtime',        airtimeRoutes);
+app.use('/api/school', schoolRoutes);
 app.use('/api/greeting', greetingRoutes);
 
 app.use((err, req, res, next) => {
