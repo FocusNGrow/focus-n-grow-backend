@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus N Grow — School Admin Panel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; }
+  .login-screen { display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; padding: 20px; }
+  .card { background: #1e1e2e; border-radius: 16px; padding: 32px;
+    width: 100%; max-width: 420px; }
+  h1 { font-size: 24px; margin-bottom: 8px; }
+  h2 { font-size: 20px; margin-bottom: 20px; color: #ffb347; }
+  .subtitle { color: #888; font-size: 14px; margin-bottom: 28px; }
+  input, select { width: 100%; padding: 12px 16px; background: #2d2d3d;
+    border: 1px solid #444; border-radius: 10px; color: #fff;
+    font-size: 14px; margin-bottom: 14px; outline: none; }
+  input:focus, select:focus { border-color: #ffb347; }
+  button { width: 100%; padding: 14px; background: #ffb347;
+    color: #000; border: none; border-radius: 10px; font-size: 16px;
+    font-weight: bold; cursor: pointer; }
+  button:hover { background: #ffa020; }
+  .nav { background: #1e1e2e; padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between; }
+  .nav h1 { font-size: 18px; color: #ffb347; }
+  .nav span { color: #888; font-size: 14px; cursor: pointer; }
+  .main { padding: 24px; max-width: 1000px; margin: 0 auto; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px; margin-bottom: 28px; }
+  .stat { background: #1e1e2e; border-radius: 12px; padding: 20px; text-align: center; }
+  .stat .num { font-size: 36px; font-weight: bold; color: #ffb347; }
+  .stat .label { color: #888; font-size: 13px; margin-top: 4px; }
+  .section { background: #1e1e2e; border-radius: 14px; padding: 20px;
+    margin-bottom: 20px; }
+  .section h3 { margin-bottom: 16px; font-size: 16px; }
+  .mood-bar { display: flex; gap: 12px; flex-wrap: wrap; }
+  .mood-item { background: #2d2d3d; border-radius: 10px; padding: 14px 20px;
+    text-align: center; flex: 1; min-width: 100px; }
+  .mood-item .emoji { font-size: 28px; }
+  .mood-item .count { font-size: 22px; font-weight: bold; margin: 4px 0; }
+  .mood-item .name { color: #888; font-size: 12px; }
+  .school-code { font-size: 32px; font-weight: bold; color: #ffb347;
+    letter-spacing: 4px; text-align: center; padding: 16px;
+    background: #ffb34711; border-radius: 10px; margin-bottom: 8px; }
+  .error { color: #ff6b6b; font-size: 13px; margin-bottom: 10px; }
+  .success { color: #4caf50; font-size: 13px; margin-bottom: 10px; }
+  #loginScreen { display: flex; }
+  #dashboard { display: none; }
+  .class-item { background: #2d2d3d; border-radius: 10px; padding: 14px;
+    margin-bottom: 8px; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-screen">
+  <div class="card">
+    <h1>🏫 Focus N Grow</h1>
+    <h2>Admin Panel</h2>
+    <p class="subtitle">School Principal / Administrator Login</p>
+    <div id="loginError" class="error" style="display:none"></div>
+    <input type="email" id="loginEmail" placeholder="Admin email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="login()">Sign In as Admin</button>
+  </div>
+</div>
+
+<div id="dashboard">
+  <div class="nav">
+    <h1>🏫 School Admin Panel</h1>
+    <span onclick="logout()">👤 <span id="adminName"></span> — Logout</span>
+  </div>
+  <div class="main">
+
+    <div class="stats">
+      <div class="stat">
+        <div class="num" id="totalStudents">0</div>
+        <div class="label">Total Students</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="totalClasses">0</div>
+        <div class="label">Classes</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="totalAssignments">0</div>
+        <div class="label">Assignments</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="totalCompletions">0</div>
+        <div class="label">Completions</div>
+      </div>
+    </div>
+
+    <!-- School Code -->
+    <div class="section">
+      <h3>🔑 Your School Code</h3>
+      <p style="color:#888;font-size:13px;margin-bottom:12px">
+        Share this code with students so they can join your school on the app
+      </p>
+      <div class="school-code" id="schoolCode">Loading...</div>
+      <p style="color:#888;font-size:12px;text-align:center">
+        Students enter this in: Secondary School → School Mode → Join My School
+      </p>
+    </div>
+
+    <!-- Mood Pulse -->
+    <div class="section">
+      <h3>😊 Weekly Mood Pulse (Last 7 days)</h3>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">
+        How your students are feeling about their workload
+      </p>
+      <div class="mood-bar">
+        <div class="mood-item">
+          <div class="emoji">😊</div>
+          <div class="count" id="moodGreat">0</div>
+          <div class="name">Great</div>
+        </div>
+        <div class="mood-item">
+          <div class="emoji">🙂</div>
+          <div class="count" id="moodOk">0</div>
+          <div class="name">OK</div>
+        </div>
+        <div class="mood-item">
+          <div class="emoji">😕</div>
+          <div class="count" id="moodStruggling">0</div>
+          <div class="name">Struggling</div>
+        </div>
+        <div class="mood-item" style="border: 2px solid #ff6b6b22">
+          <div class="emoji">😩</div>
+          <div class="count" id="moodOverwhelmed" style="color:#ff6b6b">0</div>
+          <div class="name" style="color:#ff6b6b">Overwhelmed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classes -->
+    <div class="section">
+      <h3>📚 Classes</h3>
+      <div id="classesList" style="margin-bottom:16px">
+        <p style="color:#888;font-size:14px">Loading classes...</p>
+      </div>
+      <h4 style="margin-bottom:12px;font-size:14px">Add New Class</h4>
+      <div id="classMsg" style="display:none"></div>
+      <input type="text" id="className" placeholder="Class name (e.g. SS2A)">
+      <select id="classGrade">
+        <option value="JSS1">JSS 1</option>
+        <option value="JSS2">JSS 2</option>
+        <option value="JSS3">JSS 3</option>
+        <option value="SS1">SS 1</option>
+        <option value="SS2" selected>SS 2</option>
+        <option value="SS3">SS 3</option>
+      </select>
+      <button onclick="createClass()">Add Class</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const BASE = '';
+let token = localStorage.getItem('admin_token');
+let adminId = localStorage.getItem('admin_id');
+let schoolId = localStorage.getItem('school_id');
+
+if (token) showDashboard();
+
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value.trim();
+  if (!email || !pass) return showError('loginError', 'Please fill in all fields');
+  try {
+    const res = await fetch(BASE + '/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass }),
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      token = data.token;
+      adminId = data.id;
+      localStorage.setItem('admin_token', token);
+      localStorage.setItem('admin_id', adminId);
+      localStorage.setItem('admin_name', data.name);
+      await getOrCreateSchool();
+      showDashboard();
+    } else {
+      showError('loginError', data.message || 'Login failed');
+    }
+  } catch (e) {
+    showError('loginError', 'Connection error');
+  }
+}
+
+async function getOrCreateSchool() {
+  try {
+    const res = await fetch(BASE + '/api/school/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        name: 'My School',
+        admin_user_id: adminId,
+      }),
+    });
+    const data = await res.json();
+    if (data.data?.id) {
+      schoolId = data.data.id;
+      localStorage.setItem('school_id', schoolId);
+      localStorage.setItem('school_code', data.school_code || data.data?.school_code);
+    }
+  } catch (e) {}
+}
+
+function showDashboard() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('adminName').textContent =
+    localStorage.getItem('admin_name') || 'Admin';
+  document.getElementById('schoolCode').textContent =
+    localStorage.getItem('school_code') || 'Register school first';
+  if (schoolId) loadOverview();
+}
+
+async function loadOverview() {
+  try {
+    const res = await fetch(BASE + '/api/admin/school/' + schoolId + '/overview',
+      { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await res.json();
+    if (data.data) {
+      const d = data.data;
+      document.getElementById('totalStudents').textContent = d.total_students;
+      document.getElementById('totalClasses').textContent = d.total_classes;
+      document.getElementById('totalAssignments').textContent = d.total_assignments;
+      document.getElementById('totalCompletions').textContent = d.total_completions;
+      document.getElementById('moodGreat').textContent = d.mood_summary?.great || 0;
+      document.getElementById('moodOk').textContent = d.mood_summary?.ok || 0;
+      document.getElementById('moodStruggling').textContent = d.mood_summary?.struggling || 0;
+      document.getElementById('moodOverwhelmed').textContent = d.mood_summary?.overwhelmed || 0;
+
+      const list = document.getElementById('classesList');
+      if (d.classes?.length) {
+        list.innerHTML = d.classes.map(c =>
+          `<div class="class-item">
+            <span>${c.name} — ${c.grade_level}</span>
+            <span style="color:#888;font-size:12px">Class ID: ${c.id.substring(0,8)}...</span>
+          </div>`).join('');
+      } else {
+        list.innerHTML = '<p style="color:#888;font-size:14px">No classes yet.</p>';
+      }
+    }
+  } catch (e) {}
+}
+
+async function createClass() {
+  const name = document.getElementById('className').value.trim();
+  const grade = document.getElementById('classGrade').value;
+  if (!name) return showMsg('classMsg', 'Enter a class name', 'error');
+  try {
+    const res = await fetch(BASE + '/api/admin/school/' + schoolId + '/class', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ name, grade_level: grade, teacher_id: adminId }),
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showMsg('classMsg', 'Class created!', 'success');
+      document.getElementById('className').value = '';
+      loadOverview();
+    } else {
+      showMsg('classMsg', data.message || 'Failed', 'error');
+    }
+  } catch (e) {
+    showMsg('classMsg', 'Connection error', 'error');
+  }
+}
+
+function logout() { localStorage.clear(); location.reload(); }
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+function showMsg(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.className = type;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+</script>
+</body>
+</html>

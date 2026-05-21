@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const sequelize = require('./config/database');
 
@@ -34,6 +35,8 @@ const syncRoutes         = require('./routes/sync');
 const opayRoutes         = require('./routes/opay');
 const palmPayRoutes      = require('./routes/palmpay');
 const airtimeRoutes      = require('./routes/airtime');
+const teacherRoutes = require('./routes/teacher');
+const adminRoutes  = require('./routes/admin');
 const schoolRoutes = require('./routes/school');
 const greetingRoutes = require('./routes/greeting');
 
@@ -84,6 +87,9 @@ app.use('/api/sync',           syncRoutes);
 app.use('/api/payment',        opayRoutes);
 app.use('/api/payment',        palmPayRoutes);
 app.use('/api/airtime',        airtimeRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/admin',   adminRoutes);
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/school', schoolRoutes);
 app.use('/api/greeting', greetingRoutes);
 
