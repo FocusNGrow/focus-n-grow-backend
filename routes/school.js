@@ -146,4 +146,19 @@ router.get('/:school_id/mood-pulse', async (req, res) => {
   }
 });
 
+// POST /api/school/mood
+router.post('/mood', async (req, res) => {
+  try {
+    const { student_user_id, school_id, class_id, mood } = req.body;
+    const { data, error } = await supabase
+      .from('school_mood_logs')
+      .insert({ student_user_id, school_id, class_id, mood })
+      .select()
+      .single();
+    if (error) throw error;
+    res.json({ status: 'success', data });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
 module.exports = router; 
