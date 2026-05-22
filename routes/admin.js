@@ -76,4 +76,25 @@ router.post('/school/:school_id/class', async (req, res) => {
   }
 });
 
+// POST /api/admin/school/set-limit (super admin sets student limit after payment)
+router.post('/school/set-limit', async (req, res) => {
+  try {
+    const { school_id, max_students, amount_paid } = req.body;
+    const { data, error } = await supabase
+      .from('schools')
+      .update({
+        max_students: parseInt(max_students),
+        subscription_amount: amount_paid,
+        subscription_plan: 'institutional',
+      })
+      .eq('id', school_id)
+      .select()
+      .single();
+    if (error) throw error;
+    res.json({ status: 'success', data,
+      message: `School can now onboard up to ${max_students} students.` });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
 module.exports = router;

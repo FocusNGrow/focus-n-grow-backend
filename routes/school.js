@@ -32,22 +32,60 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// POST /api/school/join (student joins with school code)
+// POST /api/school/join
 router.post('/join', async (req, res) => {
   try {
     const { school_code, student_user_id, class_id } = req.body;
-    const { data: school } = await supabase
+
+    const { data: school, error: schoolErr } = await supabase
       .from('schools')
       .select()
       .eq('school_code', school_code)
       .single();
-    if (!school) return res.status(404).json({ status: 'error', message: 'Invalid school code' });
+
+    if (schoolErr || !school) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Invalid school code. Please check with your teacher.',
+      });
+    }
+
+    // Check student limit
+    if (school.students_enrolled >= school.max_students) {
+      return res.status(403).json({
+        status: 'error',
+        message: `This school has reached its student limit (${school.max_students} students). `
+          + 'Please ask your school admin to upgrade the subscription.',
+      });
+    }
+
+    // Check if student already enrolled
+    const { data: existing } = await supabase
+      .from('school_enrollments')
+      .select()
+      .eq('school_id', school.id)
+      .eq('student_user_id', student_user_id)
+      .single();
+
+    if (existing) {
+      return res.json({ status: 'success', data: existing, school, alreadyEnrolled: true });
+    }
+
+    // Enroll student
     const { data, error } = await supabase
       .from('school_enrollments')
       .insert({ school_id: school.id, class_id, student_user_id })
       .select()
       .single();
+
     if (error) throw error;
+
+    // Increment enrolled count
+    await supabase
+      .from('schools')
+      .update({ students_enrolled: (school.students_enrolled || 0) + 1 })
+      .eq('id', school.id);
+
     res.json({ status: 'success', data, school });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
@@ -159,6 +197,37 @@ router.post('/mood', async (req, res) => {
     res.json({ status: 'success', data });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+// GET /api/school/:school_id/leaderboard
+router.get('/:school_id/leaderboard', async (req, res) => {
+  try {
+    const { data: completions, error } = await supabase
+      .from('assignment_completions')
+      .select('student_user_id, minutes_studied')
+      .eq('completed', true);
+
+    if (error) throw error;
+
+    // Aggregate by student
+    const totals = {};
+    completions.forEach(c => {
+      const id = c.student_user_id;
+      totals[id] = (totals[id] || 0) + (c.minutes_studied || 0);
+    });
+
+    const leaderboard = Object.entries(totals)
+      .map(([student_user_id, total_minutes]) => ({
+        student_user_id,
+        total_minutes,
+        total_hours: Math.round(total_minutes / 60 * 10) / 10,
+      }))
+      .sort((a, b) => b.total_minutes - a.total_minutes)
+      .slice(0, 20);
+
+    res.json({ status: 'success', data: leaderboard });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
   }
 });
 module.exports = router; 

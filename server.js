@@ -89,6 +89,49 @@ app.use('/api/payment',        palmPayRoutes);
 app.use('/api/airtime',        airtimeRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/admin',   adminRoutes);
+// Super admin stats endpoint
+app.get('/api/superadmin/stats', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const { Op } = require('sequelize');
+    const { createClient } = require('@supabase/supabase-js');
+    const sb = createClient(
+      process.env.SUPABASE_URL || 'https://ojjsdkucujkxxsfbzqpf.supabase.co',
+      process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+    );
+
+    const totalUsers = await User.count();
+    const freeUsers = await User.count({ where: { plan_type: [null, 'free'] } });
+    const basicUsers = await User.count({ where: { plan_type: 'basic' } });
+    const premiumUsers = await User.count({ where: { plan_type: 'premium' } });
+
+    const { data: schools } = await sb.from('schools').select();
+    const schoolRevenue = schools?.reduce((sum, s) =>
+      sum + (parseFloat(s.subscription_amount) || 0), 0) || 0;
+
+    const recentUsers = await User.findAll({
+      order: [['createdAt', 'DESC']],
+      limit: 20,
+      attributes: ['id', 'name', 'email', 'plan_type', 'createdAt'],
+    });
+
+    res.json({
+      status: 'success',
+      stats: {
+        total_users: totalUsers,
+        free_users: freeUsers,
+        basic_users: basicUsers,
+        premium_users: premiumUsers,
+        total_schools: schools?.length || 0,
+        school_revenue: schoolRevenue,
+      },
+      recent_users: recentUsers,
+      schools: schools || [],
+    });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/school', schoolRoutes);
 app.use('/api/greeting', greetingRoutes);
