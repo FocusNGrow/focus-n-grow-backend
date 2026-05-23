@@ -32,69 +32,99 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// POST /api/school/join
+// POST /api/school/join (student joins with personal token)
 router.post('/join', async (req, res) => {
   try {
-    const { school_code, student_user_id, class_id } = req.body;
+    const { student_token, student_user_id } = req.body;
 
-    const { data: school, error: schoolErr } = await supabase
-      .from('schools')
-      .select()
-      .eq('school_code', school_code)
+    if (!student_token || !student_user_id) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Student token and user ID are required',
+      });
+    }
+
+    // Find the token
+    const { data: tokenRecord, error: tokenErr } = await supabase
+      .from('school_student_tokens')
+      .select('*, schools(*)')
+      .eq('token', student_token.toUpperCase())
       .single();
 
-    if (schoolErr || !school) {
+    if (tokenErr || !tokenRecord) {
       return res.status(404).json({
         status: 'error',
-        message: 'Invalid school code. Please check with your teacher.',
+        message: 'Invalid token. Please check the code your school gave you.',
       });
     }
 
-    // Check student limit
-    if (school.students_enrolled >= school.max_students) {
+    // Check if already used by someone else
+    if (tokenRecord.used && tokenRecord.used_by !== student_user_id) {
       return res.status(403).json({
         status: 'error',
-        message: `This school has reached its student limit (${school.max_students} students). `
-          + 'Please ask your school admin to upgrade the subscription.',
+        message: 'This token has already been used by another student.',
       });
     }
 
-    // Check if student already enrolled
-    const { data: existing } = await supabase
-      .from('school_enrollments')
-      .select()
-      .eq('school_id', school.id)
-      .eq('student_user_id', student_user_id)
-      .single();
-
-    if (existing) {
-      return res.json({ status: 'success', data: existing, school, alreadyEnrolled: true });
+    // If already used by this same student, let them back in (re-login)
+    if (tokenRecord.used && tokenRecord.used_by === student_user_id) {
+      return res.json({
+        status: 'success',
+        data: tokenRecord,
+        school: tokenRecord.schools,
+        alreadyEnrolled: true,
+        message: 'Welcome back!',
+      });
     }
 
+    // Mark token as used
+    await supabase
+      .from('school_student_tokens')
+      .update({
+        used: true,
+        used_by: student_user_id,
+        used_at: new Date().toISOString(),
+      })
+      .eq('id', tokenRecord.id);
+
     // Enroll student
-    const { data, error } = await supabase
+    const { data: enrollment } = await supabase
       .from('school_enrollments')
-      .insert({ school_id: school.id, class_id, student_user_id })
+      .insert({
+        school_id: tokenRecord.school_id,
+        student_user_id,
+      })
       .select()
       .single();
 
-    if (error) throw error;
-
-    // Increment enrolled count
+    // Update enrolled count
+    const { data: school } = await supabase
+      .from('schools')
+      .select('students_enrolled')
+      .eq('id', tokenRecord.school_id)
+      .single();
     await supabase
       .from('schools')
-      .update({ students_enrolled: (school.students_enrolled || 0) + 1 })
-      .eq('id', school.id);
+      .update({ students_enrolled: (school?.students_enrolled || 0) + 1 })
+      .eq('id', tokenRecord.school_id);
 
-    // Grant premium access to the student
+    // Grant premium to student
     const User = require('../models/User');
     await User.update(
       { plan_type: 'premium' },
       { where: { id: student_user_id } }
     );
 
-    res.json({ status: 'success', data, school,
-      message: 'Joined successfully! Premium access granted.' });
+    res.json({
+      status: 'success',
+      data: enrollment,
+      school: tokenRecord.schools,
+      message: 'Successfully joined! Premium access granted.',
+    });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
 
 // GET /api/school/:school_id/classes
 router.get('/:school_id/classes', async (req, res) => {
@@ -250,6 +280,72 @@ router.post('/weekly-target/set', async (req, res) => {
       .select().single();
     if (error) throw error;
     res.json({ status: 'success', data });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+// POST /api/school/generate-tokens (super admin generates tokens after payment)
+router.post('/generate-tokens', async (req, res) => {
+  try {
+    const { school_id, quantity } = req.body;
+    if (!school_id || !quantity || quantity < 1 || quantity > 2000) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'school_id and quantity (1-2000) required',
+      });
+    }
+
+    const tokens = [];
+    for (let i = 0; i < quantity; i++) {
+      const token = 'FNG-' + Math.random().toString(36)
+        .substring(2, 7).toUpperCase();
+      tokens.push({ school_id, token });
+    }
+
+    const { data, error } = await supabase
+      .from('school_student_tokens')
+      .insert(tokens)
+      .select();
+
+    if (error) throw error;
+
+    // Update max_students count on school
+    const { data: school } = await supabase
+      .from('schools').select('max_students').eq('id', school_id).single();
+    await supabase.from('schools')
+      .update({ max_students: (school?.max_students || 0) + quantity })
+      .eq('id', school_id);
+
+    res.json({
+      status: 'success',
+      message: `${quantity} tokens generated`,
+      tokens: data.map(t => t.token),
+      data,
+    });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+// GET /api/school/:school_id/tokens (super admin views token usage)
+router.get('/:school_id/tokens', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('school_student_tokens')
+      .select()
+      .eq('school_id', req.params.school_id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    const total = data.length;
+    const used = data.filter(t => t.used).length;
+    const remaining = total - used;
+
+    res.json({
+      status: 'success',
+      summary: { total, used, remaining },
+      tokens: data,
+    });
   } catch (e) {
     res.status(500).json({ status: 'error', message: e.message });
   }

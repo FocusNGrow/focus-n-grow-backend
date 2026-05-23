@@ -125,7 +125,8 @@
         <tr>
           <th>School Name</th><th>Code</th>
           <th>Enrolled</th><th>Limit</th>
-          <th>Update Limit</th>
+          <th>Tokens</th>
+          <th>Actions</th>
         </tr>
         <tbody id="schoolsTable">
           <tr><td colspan="5" style="color:#888;text-align:center;padding:20px">
@@ -203,14 +204,27 @@ async function loadStats() {
             <td>${sc.name}</td>
             <td style="color:#6c63ff;font-weight:bold;letter-spacing:2px">
               ${sc.school_code}</td>
-            <td>${sc.students_enrolled || 0}</td>
-            <td>${sc.max_students || 50}</td>
+            <td>${sc.students_enrolled || 0} / ${sc.max_students || 0}</td>
+            <td id="token_summary_${sc.id}">Loading...</td>
             <td>
-              <input type="number" id="limit_${sc.id}" value="${sc.max_students || 50}">
-              <button onclick="updateLimit('${sc.id}')">Update</button>
+              <input type="number" id="gen_qty_${sc.id}" 
+                placeholder="Qty" style="width:70px;margin-right:6px">
+              <button onclick="generateTokens('${sc.id}')" 
+                style="background:#6c63ff;font-size:12px;padding:5px 10px;
+                width:auto;margin-bottom:4px">
+                Generate Tokens
+              </button>
+              <br>
+              <button onclick="viewTokens('${sc.id}','${sc.name}')"
+                style="background:transparent;border:1px solid #6c63ff;
+                color:#6c63ff;font-size:11px;padding:4px 10px;width:auto">
+                View / Copy Tokens
+              </button>
             </td>
           </tr>
         `).join('');
+        // Load token summaries
+        data.schools.forEach(sc => loadTokenSummary(sc.id));
       } else {
         stb.innerHTML = '<tr><td colspan="5" style="color:#888;text-align:center;padding:20px">No schools yet</td></tr>';
       }
@@ -239,6 +253,70 @@ async function updateLimit(schoolId) {
     }
   } catch (e) {
     alert('Failed to update limit');
+  }
+}
+async function loadTokenSummary(schoolId) {
+  try {
+    const res = await fetch(BASE + '/api/school/' + schoolId + '/tokens');
+    const data = await res.json();
+    const el = document.getElementById('token_summary_' + schoolId);
+    if (el && data.summary) {
+      const { total, used, remaining } = data.summary;
+      el.innerHTML = `<span style="color:#4caf50">${used} used</span> / 
+        <span style="color:#888">${total} total</span><br>
+        <span style="color:#ffb347;font-size:11px">${remaining} remaining</span>`;
+    }
+  } catch(e) {}
+}
+
+async function generateTokens(schoolId) {
+  const qty = parseInt(document.getElementById('gen_qty_' + schoolId).value);
+  if (!qty || qty < 1) {
+    alert('Enter the number of tokens to generate (= number of students that paid)');
+    return;
+  }
+  if (!confirm(`Generate ${qty} unique student tokens for this school?\n\nThis means ${qty} students can join. Make sure payment of ₦${(qty*2000).toLocaleString()} has been received.`)) return;
+
+  try {
+    const res = await fetch(BASE + '/api/school/generate-tokens', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ school_id: schoolId, quantity: qty }),
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      alert(`✅ ${qty} tokens generated successfully!\nClick "View / Copy Tokens" to get the list.`);
+      loadStats();
+    } else {
+      alert('Error: ' + (data.message || 'Failed'));
+    }
+  } catch(e) {
+    alert('Connection error');
+  }
+}
+
+async function viewTokens(schoolId, schoolName) {
+  try {
+    const res = await fetch(BASE + '/api/school/' + schoolId + '/tokens');
+    const data = await res.json();
+    if (!data.tokens?.length) {
+      alert('No tokens generated yet for this school.');
+      return;
+    }
+    const unusedTokens = data.tokens.filter(t => !t.used);
+    const text = unusedTokens.map(t => t.token).join('\n');
+    const summary = `School: ${schoolName}\nTotal: ${data.summary.total} | Used: ${data.summary.used} | Remaining: ${data.summary.remaining}\n\n--- UNUSED TOKENS (distribute to students) ---\n${text}`;
+    
+    // Create a temporary textarea to copy
+    const ta = document.createElement('textarea');
+    ta.value = summary;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert(`Token list copied to clipboard!\n\n${data.summary.total} total | ${data.summary.used} used | ${data.summary.remaining} remaining\n\nPaste into WhatsApp or email and send to the school admin.`);
+  } catch(e) {
+    alert('Failed to load tokens');
   }
 }
 
