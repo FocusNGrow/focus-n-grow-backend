@@ -102,6 +102,19 @@
       <h3>📋 My Assignments</h3>
       <div id="assignmentsList">
         <p style="color:#888; font-size:14px">Loading...</p>
+<!-- Weekly Targets -->
+    <div class="section">
+      <h3>🎯 Set Weekly Study Targets</h3>
+      <p style="color:#888;font-size:13px;margin-bottom:14px">
+        Tell students how many hours per week to study each subject
+      </p>
+      <div id="targetMsg" style="display:none"></div>
+      <input type="text" id="tSubject" placeholder="Subject (e.g. Mathematics)">
+      <input type="number" id="tHours" placeholder="Hours per week (e.g. 3)" value="3" min="1" max="20">
+      <button onclick="setWeeklyTarget()" style="background:#03dac6;color:#000">
+        Set Weekly Target
+      </button>
+    </div>
       </div>
     </div>
   </div>
@@ -242,6 +255,33 @@ function showMsg(id, msg, type) {
   el.className = type;
   el.style.display = 'block';
   setTimeout(() => el.style.display = 'none', 3000);
+}
+async function setWeeklyTarget() {
+  const subject = document.getElementById('tSubject').value.trim();
+  const hours = parseInt(document.getElementById('tHours').value) || 3;
+  if (!subject) return showMsg('targetMsg', 'Enter a subject', 'error');
+  try {
+    const res = await fetch(BASE + '/api/school/weekly-target/set', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        teacher_id: teacherId,
+        subject, weekly_hours: hours,
+        class_id: null,
+      }),
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showMsg('targetMsg', `Weekly target set: ${hours} hrs of ${subject}`, 'success');
+      document.getElementById('tSubject').value = '';
+      loadAssignments();
+    } else {
+      showMsg('targetMsg', data.message || 'Failed', 'error');
+    }
+  } catch (e) {
+    showMsg('targetMsg', 'Connection error', 'error');
+  }
 }
 </script>
 </body>

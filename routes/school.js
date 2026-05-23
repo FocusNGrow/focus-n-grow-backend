@@ -230,4 +230,24 @@ router.get('/:school_id/leaderboard', async (req, res) => {
     res.status(500).json({ status: 'error', message: e.message });
   }
 });
+// POST /api/school/weekly-target/set
+router.post('/weekly-target/set', async (req, res) => {
+  try {
+    const { class_id, subject, weekly_hours, teacher_id } = req.body;
+    const { data, error } = await supabase
+      .from('assignments')
+      .insert({
+        class_id, teacher_id, subject,
+        title: `Weekly Target: ${weekly_hours} hours of ${subject}`,
+        description: `Complete ${weekly_hours} hours of focused ${subject} study this week`,
+        minimum_focus_minutes: weekly_hours * 60,
+        is_weekly_target: true,
+      })
+      .select().single();
+    if (error) throw error;
+    res.json({ status: 'success', data });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
 module.exports = router; 
