@@ -87,6 +87,7 @@
     <div class="section">
       <h3>➕ Create New Assignment</h3>
       <div id="assignMsg" style="display:none"></div>
+      <input type="text" id="aClassId" placeholder="Class ID (from Admin panel — optional)">
       <input type="text" id="aSubject" placeholder="Subject (e.g. Mathematics)">
       <input type="text" id="aTitle" placeholder="Assignment title">
       <textarea id="aDesc" rows="2"
@@ -215,6 +216,7 @@ async function createAssignment() {
       },
       body: JSON.stringify({
         teacher_id: teacherId,
+        class_id: document.getElementById('aClassId').value.trim() || null,
         subject, title,
         description: desc,
         minimum_focus_minutes: minutes,

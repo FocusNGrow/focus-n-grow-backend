@@ -86,11 +86,15 @@ router.post('/join', async (req, res) => {
       .update({ students_enrolled: (school.students_enrolled || 0) + 1 })
       .eq('id', school.id);
 
-    res.json({ status: 'success', data, school });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
-  }
-});
+    // Grant premium access to the student
+    const User = require('../models/User');
+    await User.update(
+      { plan_type: 'premium' },
+      { where: { id: student_user_id } }
+    );
+
+    res.json({ status: 'success', data, school,
+      message: 'Joined successfully! Premium access granted.' });
 
 // GET /api/school/:school_id/classes
 router.get('/:school_id/classes', async (req, res) => {
