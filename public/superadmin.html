@@ -5,293 +5,490 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Focus N Grow — Super Admin</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Segoe UI',sans-serif;background:#0a0a14;color:#fff;min-height:100vh}
-  .login{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-  .card{background:#1a1a2e;border-radius:16px;padding:32px;width:100%;max-width:380px}
-  h1{font-size:22px;margin-bottom:6px}
-  h2{font-size:18px;color:#6c63ff;margin-bottom:20px}
-  p{color:#888;font-size:13px;margin-bottom:24px}
-  input{width:100%;padding:12px 16px;background:#2d2d3d;border:1px solid #444;
-    border-radius:10px;color:#fff;font-size:14px;margin-bottom:12px;outline:none}
-  input:focus{border-color:#6c63ff}
-  button{width:100%;padding:13px;background:#6c63ff;color:#fff;border:none;
-    border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer}
-  button:hover{background:#5a52e0}
-  .nav{background:#1a1a2e;padding:16px 24px;display:flex;
-    justify-content:space-between;align-items:center;border-bottom:1px solid #2d2d3d}
-  .nav h1{font-size:16px}
-  .logout{color:#888;font-size:13px;cursor:pointer}
-  .main{padding:24px;max-width:1100px;margin:0 auto}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-    gap:16px;margin-bottom:28px}
-  .stat{background:#1a1a2e;border-radius:14px;padding:20px;text-align:center;
-    border:1px solid #2d2d3d}
-  .stat .n{font-size:38px;font-weight:bold}
-  .stat .l{color:#888;font-size:12px;margin-top:4px}
-  .free{color:#888}
-  .basic{color:#00c48c}
-  .premium{color:#ffb347}
-  .school{color:#6c63ff}
-  .revenue{color:#ff9800}
-  .section{background:#1a1a2e;border-radius:14px;padding:20px;
-    margin-bottom:20px;border:1px solid #2d2d3d}
-  .section h3{margin-bottom:16px;font-size:15px;color:#ccc}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{text-align:left;padding:10px 12px;color:#888;border-bottom:1px solid #2d2d3d;
-    font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
-  td{padding:10px 12px;border-bottom:1px solid #1d1d2d}
-  .badge{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold}
-  .b-free{background:#88888822;color:#888}
-  .b-basic{background:#00c48c22;color:#00c48c}
-  .b-premium{background:#ffb34722;color:#ffb347}
-  .err{color:#ff6b6b;font-size:13px;margin-bottom:10px;display:none}
-  #loginScreen{display:flex}
-  #dashboard{display:none}
-  .school-row td:last-child input{width:80px;padding:4px 8px;font-size:12px;
-    margin-right:6px}
-  .school-row button{width:auto;padding:5px 12px;font-size:12px}
-  .refresh{color:#6c63ff;cursor:pointer;font-size:12px;float:right}
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',sans-serif; background:#0a0a14; color:#fff; min-height:100vh; }
+
+  /* LOGIN */
+  .login { display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
+  .login-card { background:#1a1a2e; border-radius:16px; padding:36px; width:100%; max-width:380px; }
+  .login-card h1 { font-size:22px; margin-bottom:6px; }
+  .login-card h2 { font-size:18px; color:#6c63ff; margin-bottom:6px; }
+  .login-card p { color:#888; font-size:13px; margin-bottom:24px; }
+
+  /* INPUTS */
+  input, select {
+    width:100%; padding:12px 16px; background:#2d2d3d;
+    border:1px solid #444; border-radius:10px; color:#fff;
+    font-size:14px; margin-bottom:12px; outline:none;
+  }
+  input:focus, select:focus { border-color:#6c63ff; }
+  input[type=number] { width:auto; }
+
+  /* BUTTONS */
+  .btn {
+    padding:13px 20px; background:#6c63ff; color:#fff;
+    border:none; border-radius:10px; font-size:14px;
+    font-weight:bold; cursor:pointer; width:100%;
+  }
+  .btn:hover { background:#5a52e0; }
+  .btn-sm {
+    padding:5px 12px; font-size:12px; width:auto;
+    border:none; border-radius:6px; cursor:pointer;
+    font-weight:600;
+  }
+  .btn-purple { background:#6c63ff; color:#fff; }
+  .btn-purple:hover { background:#5a52e0; }
+  .btn-outline {
+    background:transparent; border:1px solid #6c63ff;
+    color:#6c63ff;
+  }
+  .btn-outline:hover { background:#6c63ff22; }
+  .btn-green { background:#4caf50; color:#fff; }
+  .btn-green:hover { background:#43a047; }
+
+  /* NAV */
+  .nav {
+    background:#1a1a2e; padding:16px 24px;
+    display:flex; justify-content:space-between;
+    align-items:center; border-bottom:1px solid #2d2d3d;
+    position:sticky; top:0; z-index:100;
+  }
+  .nav h1 { font-size:16px; color:#6c63ff; }
+  .nav-right { display:flex; align-items:center; gap:16px; }
+  .nav-right span { color:#888; font-size:13px; cursor:pointer; }
+  .nav-right span:hover { color:#fff; }
+
+  /* MAIN */
+  .main { padding:24px; max-width:1200px; margin:0 auto; }
+
+  /* STATS GRID */
+  .stats {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+    gap:16px; margin-bottom:28px;
+  }
+  .stat {
+    background:#1a1a2e; border-radius:14px; padding:20px;
+    text-align:center; border:1px solid #2d2d3d;
+  }
+  .stat .n { font-size:38px; font-weight:bold; }
+  .stat .l { color:#888; font-size:12px; margin-top:4px; }
+  .c-purple { color:#6c63ff; }
+  .c-grey { color:#888; }
+  .c-green { color:#4caf50; }
+  .c-gold { color:#ffb347; }
+  .c-blue { color:#03dac6; }
+  .c-orange { color:#ff9800; }
+
+  /* SECTIONS */
+  .section {
+    background:#1a1a2e; border-radius:14px; padding:20px;
+    margin-bottom:20px; border:1px solid #2d2d3d;
+  }
+  .section-header {
+    display:flex; justify-content:space-between;
+    align-items:center; margin-bottom:16px;
+  }
+  .section-header h3 { font-size:15px; color:#ccc; }
+  .refresh-btn { color:#6c63ff; cursor:pointer; font-size:13px; }
+  .refresh-btn:hover { color:#9c94ff; }
+
+  /* TABLES */
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th {
+    text-align:left; padding:10px 12px; color:#888;
+    border-bottom:1px solid #2d2d3d; font-weight:600;
+    font-size:11px; text-transform:uppercase; letter-spacing:.5px;
+  }
+  td { padding:10px 12px; border-bottom:1px solid #1d1d2d; vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:#1d1d2a; }
+
+  /* BADGES */
+  .badge { padding:3px 8px; border-radius:12px; font-size:11px; font-weight:bold; }
+  .b-free { background:#88888822; color:#888; }
+  .b-basic { background:#4caf5022; color:#4caf50; }
+  .b-premium { background:#ffb34722; color:#ffb347; }
+
+  /* TOKEN CONTROLS */
+  .token-controls { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .token-controls input { width:70px; margin:0; padding:5px 8px; font-size:12px; }
+  .token-controls select { width:auto; margin:0; padding:5px 8px; font-size:12px; }
+
+  /* ALERTS */
+  .err { color:#ff6b6b; font-size:13px; margin-bottom:10px; display:none; }
+  .success-msg { color:#4caf50; font-size:13px; }
+
+  /* VISIBILITY */
+  #loginScreen { display:flex; }
+  #dashboard { display:none; }
+
+  /* MODAL */
+  .modal-overlay {
+    display:none; position:fixed; top:0; left:0;
+    width:100%; height:100%; background:rgba(0,0,0,0.7);
+    z-index:200; justify-content:center; align-items:center;
+  }
+  .modal-overlay.show { display:flex; }
+  .modal {
+    background:#1a1a2e; border-radius:16px; padding:24px;
+    width:90%; max-width:500px; max-height:80vh;
+    overflow-y:auto; border:1px solid #2d2d3d;
+  }
+  .modal h3 { margin-bottom:12px; color:#fff; }
+  .modal-close {
+    float:right; cursor:pointer; color:#888; font-size:18px;
+    background:none; border:none; color:#888;
+  }
+  .token-list {
+    background:#0f0f1a; border-radius:10px; padding:14px;
+    font-family:monospace; font-size:13px; line-height:2;
+    max-height:300px; overflow-y:auto; margin:12px 0;
+    color:#03dac6; border:1px solid #2d2d3d;
+  }
+
+  /* RESPONSIVE */
+  @media(max-width:600px) {
+    .stats { grid-template-columns:repeat(2,1fr); }
+    .main { padding:12px; }
+    td, th { padding:8px 6px; font-size:12px; }
+  }
 </style>
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
 <div id="loginScreen" class="login">
-  <div class="card">
+  <div class="login-card">
     <h1>🔐 Focus N Grow</h1>
     <h2>Super Admin Panel</h2>
     <p>Restricted access — app owner only</p>
-    <div id="err" class="err"></div>
-    <input type="password" id="pin" placeholder="Enter super admin PIN">
-    <button onclick="checkPin()">Access Dashboard</button>
+    <div id="loginErr" class="err"></div>
+    <input type="password" id="pinInput" placeholder="Enter your admin PIN"
+      onkeydown="if(event.key==='Enter') checkPin()">
+    <button class="btn" onclick="checkPin()">Access Dashboard</button>
   </div>
 </div>
 
+<!-- DASHBOARD -->
 <div id="dashboard">
   <div class="nav">
     <h1>📊 Focus N Grow — Owner Dashboard</h1>
-    <span class="logout" onclick="logout()">Logout</span>
+    <div class="nav-right">
+      <span onclick="loadStats()">↻ Refresh</span>
+      <span onclick="logout()">Logout</span>
+    </div>
   </div>
+
   <div class="main">
 
-    <div class="grid">
+    <!-- STATS CARDS -->
+    <div class="stats">
       <div class="stat">
-        <div class="n" id="totalUsers" style="color:#6c63ff">0</div>
+        <div class="n c-purple" id="totalUsers">—</div>
         <div class="l">Total Users</div>
       </div>
       <div class="stat">
-        <div class="n free" id="freeUsers">0</div>
+        <div class="n c-grey" id="freeUsers">—</div>
         <div class="l">Free Users</div>
       </div>
       <div class="stat">
-        <div class="n basic" id="basicUsers">0</div>
-        <div class="l">Basic Subscribers</div>
+        <div class="n c-green" id="basicUsers">—</div>
+        <div class="l">Basic (₦500/mo)</div>
       </div>
       <div class="stat">
-        <div class="n premium" id="premiumUsers">0</div>
-        <div class="l">Premium Subscribers</div>
+        <div class="n c-gold" id="premiumUsers">—</div>
+        <div class="l">Premium (₦1,000/mo)</div>
       </div>
       <div class="stat">
-        <div class="n school" id="totalSchools">0</div>
-        <div class="l">Schools Enrolled</div>
+        <div class="n c-blue" id="totalSchools">—</div>
+        <div class="l">Schools</div>
       </div>
       <div class="stat">
-        <div class="n revenue" id="monthlyRevenue">₦0</div>
+        <div class="n c-orange" id="monthlyRevenue">—</div>
         <div class="l">Est. Monthly Revenue</div>
       </div>
     </div>
 
-    <!-- Recent users -->
+    <!-- RECENT USERS -->
     <div class="section">
-      <h3>👥 Recent Users
-        <span class="refresh" onclick="loadStats()">↻ Refresh</span>
-      </h3>
-      <table>
-        <tr>
-          <th>Name</th><th>Email</th>
-          <th>Plan</th><th>Joined</th>
-        </tr>
-        <tbody id="usersTable">
-          <tr><td colspan="4" style="color:#888;text-align:center;padding:20px">
-            Loading...</td></tr>
-        </tbody>
-      </table>
+      <div class="section-header">
+        <h3>👥 Recent Users</h3>
+        <span class="refresh-btn" onclick="loadStats()">↻ Refresh</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable">
+            <tr><td colspan="4" style="color:#888;text-align:center;padding:20px">
+              Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Schools -->
+    <!-- SCHOOLS & TOKENS -->
     <div class="section">
-      <h3>🏫 Schools & Student Limits</h3>
-      <table>
-        <tr>
-          <th>School Name</th><th>Code</th>
-          <th>Enrolled</th><th>Limit</th>
-          <th>Tokens</th>
-          <th>Actions</th>
-        </tr>
-        <tbody id="schoolsTable">
-          <tr><td colspan="5" style="color:#888;text-align:center;padding:20px">
-            Loading...</td></tr>
-        </tbody>
-      </table>
+      <div class="section-header">
+        <h3>🏫 Schools & Student Tokens</h3>
+        <span class="refresh-btn" onclick="loadStats()">↻ Refresh</span>
+      </div>
+      <p style="color:#888;font-size:12px;margin-bottom:16px">
+        Generate tokens after receiving payment.
+        Each token is unique and can only be used by one student.
+      </p>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>School Name</th>
+              <th>Code</th>
+              <th>Students</th>
+              <th>Token Usage</th>
+              <th>Generate Tokens</th>
+            </tr>
+          </thead>
+          <tbody id="schoolsTable">
+            <tr><td colspan="5" style="color:#888;text-align:center;padding:20px">
+              Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
+  </div>
+</div>
+
+<!-- TOKEN MODAL -->
+<div class="modal-overlay" id="tokenModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 id="modalTitle">Token List</h3>
+    <p id="modalSummary" style="color:#888;font-size:13px;margin-bottom:8px"></p>
+    <div class="token-list" id="tokenList"></div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn btn-purple" style="flex:1"
+        onclick="copyTokens()">📋 Copy All Unused Tokens</button>
+      <button class="btn btn-outline" style="flex:1"
+        onclick="closeModal()">Close</button>
+    </div>
+    <p style="color:#888;font-size:11px;margin-top:8px;text-align:center">
+      Copy and paste into WhatsApp or email. Send to school admin to distribute.
+    </p>
   </div>
 </div>
 
 <script>
 const BASE = '';
-const SUPER_PIN = 'chijioke1985';
-let adminToken = sessionStorage.getItem('sa_token');
+const SUPER_PIN = 'focusngrow2025admin';
+let currentTokenText = '';
+
+// Auto-login if session exists
+if (sessionStorage.getItem('sa_auth') === 'ok') {
+  showDashboard();
+}
 
 function checkPin() {
-  const pin = document.getElementById('pin').value;
+  const pin = document.getElementById('pinInput').value;
   if (pin === SUPER_PIN) {
-    sessionStorage.setItem('sa_token', 'granted');
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    loadStats();
+    sessionStorage.setItem('sa_auth', 'ok');
+    showDashboard();
   } else {
-    const err = document.getElementById('err');
-    err.textContent = 'Incorrect PIN';
+    const err = document.getElementById('loginErr');
+    err.textContent = 'Incorrect PIN. Try again.';
     err.style.display = 'block';
+    document.getElementById('pinInput').value = '';
   }
 }
 
-if (sessionStorage.getItem('sa_token') === 'granted') {
+function showDashboard() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
   loadStats();
+}
+
+function logout() {
+  sessionStorage.clear();
+  location.reload();
 }
 
 async function loadStats() {
   try {
     const res = await fetch(BASE + '/api/superadmin/stats');
     const data = await res.json();
-    if (data.status === 'success') {
-      const s = data.stats;
-      document.getElementById('totalUsers').textContent = s.total_users || 0;
-      document.getElementById('freeUsers').textContent = s.free_users || 0;
-      document.getElementById('basicUsers').textContent = s.basic_users || 0;
-      document.getElementById('premiumUsers').textContent = s.premium_users || 0;
-      document.getElementById('totalSchools').textContent = s.total_schools || 0;
-      const revenue = (s.basic_users * 500) + (s.premium_users * 1000)
-                    + (s.school_revenue || 0);
-      document.getElementById('monthlyRevenue').textContent =
-        '₦' + revenue.toLocaleString();
+    if (data.status !== 'success') return;
 
-      // Users table
-      const utb = document.getElementById('usersTable');
-      if (data.recent_users?.length) {
-        utb.innerHTML = data.recent_users.map(u => `
-          <tr>
-            <td>${u.name || 'Unknown'}</td>
-            <td style="color:#888">${u.email}</td>
-            <td><span class="badge b-${u.plan_type || 'free'}">
-              ${(u.plan_type || 'free').toUpperCase()}</span></td>
-            <td style="color:#888;font-size:11px">
-              ${new Date(u.createdAt || u.created_at).toLocaleDateString()}</td>
-          </tr>
-        `).join('');
-      } else {
-        utb.innerHTML = '<tr><td colspan="4" style="color:#888;text-align:center;padding:20px">No users yet</td></tr>';
-      }
+    const s = data.stats;
+    document.getElementById('totalUsers').textContent =
+      (s.total_users || 0).toLocaleString();
+    document.getElementById('freeUsers').textContent =
+      (s.free_users || 0).toLocaleString();
+    document.getElementById('basicUsers').textContent =
+      (s.basic_users || 0).toLocaleString();
+    document.getElementById('premiumUsers').textContent =
+      (s.premium_users || 0).toLocaleString();
+    document.getElementById('totalSchools').textContent =
+      (s.total_schools || 0).toLocaleString();
 
-      // Schools table
-      const stb = document.getElementById('schoolsTable');
-      if (data.schools?.length) {
-        stb.innerHTML = data.schools.map(sc => `
-          <tr class="school-row">
-            <td>${sc.name}</td>
-            <td style="color:#6c63ff;font-weight:bold;letter-spacing:2px">
-              ${sc.school_code}</td>
-            <td>${sc.students_enrolled || 0} / ${sc.max_students || 0}</td>
-            <td id="token_summary_${sc.id}">Loading...</td>
-            <td>
-              <input type="number" id="gen_qty_${sc.id}" 
-                placeholder="Qty" style="width:70px;margin-right:6px">
-              <button onclick="generateTokens('${sc.id}')" 
-                style="background:#6c63ff;font-size:12px;padding:5px 10px;
-                width:auto;margin-bottom:4px">
-                Generate Tokens
-              </button>
-              <br>
-              <button onclick="viewTokens('${sc.id}','${sc.name}')"
-                style="background:transparent;border:1px solid #6c63ff;
-                color:#6c63ff;font-size:11px;padding:4px 10px;width:auto">
-                View / Copy Tokens
-              </button>
-            </td>
-          </tr>
-        `).join('');
-        // Load token summaries
-        data.schools.forEach(sc => loadTokenSummary(sc.id));
-      } else {
-        stb.innerHTML = '<tr><td colspan="5" style="color:#888;text-align:center;padding:20px">No schools yet</td></tr>';
-      }
+    const appRevenue = (s.basic_users * 500) + (s.premium_users * 1000);
+    const schoolRevenue = s.school_revenue || 0;
+    document.getElementById('monthlyRevenue').textContent =
+      '₦' + (appRevenue + schoolRevenue).toLocaleString();
+
+    // Users table
+    const utb = document.getElementById('usersTable');
+    if (data.recent_users?.length) {
+      utb.innerHTML = data.recent_users.map(u => `
+        <tr>
+          <td>${u.name || 'Unknown'}</td>
+          <td style="color:#888;font-size:12px">${u.email}</td>
+          <td><span class="badge b-${u.plan_type || 'free'}">
+            ${(u.plan_type || 'FREE').toUpperCase()}</span></td>
+          <td style="color:#888;font-size:11px">
+            ${formatDate(u.createdAt || u.created_at)}</td>
+        </tr>
+      `).join('');
+    } else {
+      utb.innerHTML = noData(4, 'No users yet');
     }
+
+    // Schools table
+    const stb = document.getElementById('schoolsTable');
+    if (data.schools?.length) {
+      stb.innerHTML = data.schools.map(sc => `
+        <tr>
+          <td>
+            <strong>${sc.name}</strong><br>
+            <span style="color:#888;font-size:11px">
+              ${sc.address || ''} ${sc.state || ''}</span>
+          </td>
+          <td>
+            <span style="color:#6c63ff;font-weight:bold;
+              letter-spacing:2px;font-size:13px">${sc.school_code}</span>
+          </td>
+          <td>
+            <span style="color:#4caf50">${sc.students_enrolled || 0}</span>
+            <span style="color:#888"> / ${sc.max_students || 0}</span><br>
+            <span style="color:#888;font-size:11px">enrolled / capacity</span>
+          </td>
+          <td id="tok_${sc.id}">
+            <span style="color:#888;font-size:12px">Loading...</span>
+          </td>
+          <td>
+            <div class="token-controls">
+              <input type="number" id="qty_${sc.id}"
+                placeholder="Qty" min="1" max="2000">
+              <select id="term_${sc.id}">
+                <option value="4">1st Term (Sep–Dec) 4 months</option>
+                <option value="3">2nd Term (Jan–Mar) 3 months</option>
+                <option value="4">3rd Term (Apr–Jul) 4 months</option>
+                <option value="11">Full Year (Sep–Jul) 11 months</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button class="btn-sm btn-green"
+                onclick="generateTokens('${sc.id}','${sc.name}')">
+                ⚡ Generate
+              </button>
+              <button class="btn-sm btn-outline"
+                onclick="viewTokens('${sc.id}','${sc.name}')">
+                👁 View Tokens
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      // Load token summaries for each school
+      data.schools.forEach(sc => loadTokenSummary(sc.id));
+    } else {
+      stb.innerHTML = noData(5, 'No schools registered yet');
+    }
+
   } catch (e) {
     console.error('Failed to load stats:', e);
   }
 }
 
-async function updateLimit(schoolId) {
-  const newLimit = document.getElementById('limit_' + schoolId).value;
-  try {
-    const res = await fetch(BASE + '/api/admin/school/set-limit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        school_id: schoolId,
-        max_students: parseInt(newLimit),
-        amount_paid: 0,
-      }),
-    });
-    const data = await res.json();
-    if (data.status === 'success') {
-      alert('Student limit updated to ' + newLimit);
-      loadStats();
-    }
-  } catch (e) {
-    alert('Failed to update limit');
-  }
-}
 async function loadTokenSummary(schoolId) {
   try {
     const res = await fetch(BASE + '/api/school/' + schoolId + '/tokens');
     const data = await res.json();
-    const el = document.getElementById('token_summary_' + schoolId);
-    if (el && data.summary) {
+    const el = document.getElementById('tok_' + schoolId);
+    if (!el) return;
+    if (data.summary) {
       const { total, used, remaining } = data.summary;
-      el.innerHTML = `<span style="color:#4caf50">${used} used</span> / 
-        <span style="color:#888">${total} total</span><br>
-        <span style="color:#ffb347;font-size:11px">${remaining} remaining</span>`;
+      el.innerHTML = `
+        <span style="color:#4caf50;font-weight:bold">${used}</span>
+        <span style="color:#888"> used</span> /
+        <span style="color:#ccc">${total}</span>
+        <span style="color:#888"> total</span><br>
+        <span style="color:#ffb347;font-size:11px">
+          ${remaining} remaining</span>
+      `;
+    } else {
+      el.innerHTML = '<span style="color:#888;font-size:12px">No tokens yet</span>';
     }
-  } catch(e) {}
+  } catch(e) {
+    const el = document.getElementById('tok_' + schoolId);
+    if (el) el.innerHTML = '<span style="color:#888;font-size:12px">—</span>';
+  }
 }
 
-async function generateTokens(schoolId) {
-  const qty = parseInt(document.getElementById('gen_qty_' + schoolId).value);
+async function generateTokens(schoolId, schoolName) {
+  const qtyEl = document.getElementById('qty_' + schoolId);
+  const termEl = document.getElementById('term_' + schoolId);
+  const qty = parseInt(qtyEl?.value);
+  const termMonths = parseInt(termEl?.value) || 4;
+  const termName = termEl?.options[termEl.selectedIndex]?.text || '';
+
   if (!qty || qty < 1) {
-    alert('Enter the number of tokens to generate (= number of students that paid)');
+    alert('Please enter the number of students that paid.');
     return;
   }
-  if (!confirm(`Generate ${qty} unique student tokens for this school?\n\nThis means ${qty} students can join. Make sure payment of ₦${(qty*2000).toLocaleString()} has been received.`)) return;
+
+  const cost = (qty * 2000).toLocaleString();
+  const confirmed = confirm(
+    `CONFIRM TOKEN GENERATION\n\n` +
+    `School: ${schoolName}\n` +
+    `Students: ${qty}\n` +
+    `Term: ${termName}\n` +
+    `Expected payment: ₦${cost}\n\n` +
+    `Only proceed if you have received ₦${cost} from this school.\n\n` +
+    `Generate ${qty} unique student tokens?`
+  );
+  if (!confirmed) return;
 
   try {
     const res = await fetch(BASE + '/api/school/generate-tokens', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ school_id: schoolId, quantity: qty }),
+      body: JSON.stringify({
+        school_id: schoolId,
+        quantity: qty,
+        term_months: termMonths,
+      }),
     });
     const data = await res.json();
     if (data.status === 'success') {
-      alert(`✅ ${qty} tokens generated successfully!\nClick "View / Copy Tokens" to get the list.`);
+      qtyEl.value = '';
+      alert(
+        `✅ ${qty} tokens generated!\n\n` +
+        `Click "View Tokens" to copy them and send to the school admin.`
+      );
       loadStats();
     } else {
-      alert('Error: ' + (data.message || 'Failed'));
+      alert('Error: ' + (data.message || 'Failed to generate tokens'));
     }
   } catch(e) {
-    alert('Connection error');
+    alert('Connection error. Make sure Railway is online.');
   }
 }
 
@@ -299,31 +496,93 @@ async function viewTokens(schoolId, schoolName) {
   try {
     const res = await fetch(BASE + '/api/school/' + schoolId + '/tokens');
     const data = await res.json();
+
+    document.getElementById('modalTitle').textContent =
+      '🔑 Tokens — ' + schoolName;
+
     if (!data.tokens?.length) {
-      alert('No tokens generated yet for this school.');
+      document.getElementById('modalSummary').textContent =
+        'No tokens generated yet for this school.';
+      document.getElementById('tokenList').textContent = '';
+      currentTokenText = '';
+      document.getElementById('tokenModal').classList.add('show');
       return;
     }
-    const unusedTokens = data.tokens.filter(t => !t.used);
-    const text = unusedTokens.map(t => t.token).join('\n');
-    const summary = `School: ${schoolName}\nTotal: ${data.summary.total} | Used: ${data.summary.used} | Remaining: ${data.summary.remaining}\n\n--- UNUSED TOKENS (distribute to students) ---\n${text}`;
-    
-    // Create a temporary textarea to copy
-    const ta = document.createElement('textarea');
-    ta.value = summary;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    alert(`Token list copied to clipboard!\n\n${data.summary.total} total | ${data.summary.used} used | ${data.summary.remaining} remaining\n\nPaste into WhatsApp or email and send to the school admin.`);
+
+    const { total, used, remaining } = data.summary;
+    document.getElementById('modalSummary').innerHTML =
+      `Total: <strong>${total}</strong> &nbsp;|&nbsp; ` +
+      `Used: <strong style="color:#4caf50">${used}</strong> &nbsp;|&nbsp; ` +
+      `<strong style="color:#ffb347">Remaining: ${remaining}</strong>`;
+
+    const unused = data.tokens.filter(t => !t.used);
+    const usedList = data.tokens.filter(t => t.used);
+
+    let html = '';
+    if (unused.length) {
+      html += `<div style="color:#888;font-size:11px;margin-bottom:6px">
+        ── UNUSED (${unused.length}) — distribute these ──</div>`;
+      html += unused.map(t => `<div>${t.token}</div>`).join('');
+    }
+    if (usedList.length) {
+      html += `<div style="color:#888;font-size:11px;
+        margin-top:10px;margin-bottom:6px">
+        ── USED (${usedList.length}) ──</div>`;
+      html += usedList.map(t =>
+        `<div style="color:#555">${t.token} 
+          <span style="font-size:10px;color:#444">
+          — used ${formatDate(t.used_at)}</span></div>`
+      ).join('');
+    }
+
+    document.getElementById('tokenList').innerHTML = html;
+    currentTokenText = unused.map(t => t.token).join('\n');
+    document.getElementById('tokenModal').classList.add('show');
   } catch(e) {
-    alert('Failed to load tokens');
+    alert('Failed to load tokens. Check your connection.');
   }
 }
 
-function logout() {
-  sessionStorage.clear();
-  location.reload();
+function copyTokens() {
+  if (!currentTokenText) {
+    alert('No unused tokens to copy.');
+    return;
+  }
+  const ta = document.createElement('textarea');
+  ta.value = currentTokenText;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  alert(
+    `✅ Copied ${currentTokenText.split('\n').length} unused tokens!\n\n` +
+    `Paste into WhatsApp or email and send to the school admin.\n` +
+    `Remind them: each code is for ONE student only.`
+  );
 }
+
+function closeModal() {
+  document.getElementById('tokenModal').classList.remove('show');
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  try {
+    return new Date(dateStr).toLocaleDateString('en-GB', {
+      day:'numeric', month:'short', year:'numeric'
+    });
+  } catch(e) { return '—'; }
+}
+
+function noData(cols, msg) {
+  return `<tr><td colspan="${cols}" 
+    style="color:#888;text-align:center;padding:24px">${msg}</td></tr>`;
+}
+
+// Close modal when clicking outside
+document.getElementById('tokenModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
 </script>
 </body>
 </html>

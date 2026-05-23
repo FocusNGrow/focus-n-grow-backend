@@ -57,7 +57,17 @@ router.post('/join', async (req, res) => {
         message: 'Invalid token. Please check the code your school gave you.',
       });
     }
-
+    // Check if token has expired
+    if (tokenRecord.expires_at) {
+      const expiry = new Date(tokenRecord.expires_at);
+      if (new Date() > expiry) {
+        return res.status(403).json({
+          status: 'error',
+          message: 'This token has expired. Your school needs to renew '
+            + 'their subscription for the new term.',
+        });
+      }
+    }
     // Check if already used by someone else
     if (tokenRecord.used && tokenRecord.used_by !== student_user_id) {
       return res.status(403).json({
@@ -119,6 +129,7 @@ router.post('/join', async (req, res) => {
       status: 'success',
       data: enrollment,
       school: tokenRecord.schools,
+      token_expires_at: tokenRecord.expires_at,
       message: 'Successfully joined! Premium access granted.',
     });
   } catch (e) {
@@ -287,7 +298,7 @@ router.post('/weekly-target/set', async (req, res) => {
 // POST /api/school/generate-tokens (super admin generates tokens after payment)
 router.post('/generate-tokens', async (req, res) => {
   try {
-    const { school_id, quantity } = req.body;
+    const { school_id, quantity, term_months } = req.body;
     if (!school_id || !quantity || quantity < 1 || quantity > 2000) {
       return res.status(400).json({
         status: 'error',
@@ -295,11 +306,20 @@ router.post('/generate-tokens', async (req, res) => {
       });
     }
 
+    // Default expiry: 4 months from now (one Nigerian school term)
+    const termMonths = parseInt(term_months) || 4;
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + termMonths);
+
     const tokens = [];
-    for (let i = 0; i < quantity; i++) {
+    const usedTokens = new Set();
+    while (tokens.length < quantity) {
       const token = 'FNG-' + Math.random().toString(36)
         .substring(2, 7).toUpperCase();
-      tokens.push({ school_id, token });
+      if (!usedTokens.has(token)) {
+        usedTokens.add(token);
+        tokens.push({ school_id, token, expires_at: expiresAt.toISOString() });
+      }
     }
 
     const { data, error } = await supabase
@@ -313,7 +333,10 @@ router.post('/generate-tokens', async (req, res) => {
     const { data: school } = await supabase
       .from('schools').select('max_students').eq('id', school_id).single();
     await supabase.from('schools')
-      .update({ max_students: (school?.max_students || 0) + quantity })
+      .update({
+        max_students: (school?.max_students || 0) + quantity,
+        term_expires_at: expiresAt.toISOString(),
+      })
       .eq('id', school_id);
 
     res.json({

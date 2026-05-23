@@ -147,6 +147,46 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
+// Daily check: expire school subscriptions
+async function checkExpiredSubscriptions() {
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const sb = createClient(
+      process.env.SUPABASE_URL || 'https://ojjsdkucujkxxsfbzqpf.supabase.co',
+      process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+    );
+
+    // Find expired tokens
+    const { data: expiredTokens } = await sb
+      .from('school_student_tokens')
+      .select('used_by')
+      .eq('used', true)
+      .lt('expires_at', new Date().toISOString())
+      .not('used_by', 'is', null);
+
+    if (expiredTokens?.length) {
+      const expiredUserIds = expiredTokens
+        .map(t => t.used_by)
+        .filter(Boolean);
+
+      // Revert their plan to free
+      const User = require('./models/User');
+      await User.update(
+        { plan_type: 'free' },
+        { where: { id: expiredUserIds } }
+      );
+
+      console.log(`✅ Expired ${expiredUserIds.length} school subscriptions`);
+    }
+  } catch (e) {
+    console.error('Expiry check error:', e.message);
+  }
+}
+
+// Run expiry check every 24 hours
+setInterval(checkExpiredSubscriptions, 24 * 60 * 60 * 1000);
+// Also run once on startup
+setTimeout(checkExpiredSubscriptions, 5000);
 app.listen(PORT, () => {
   console.log(`
   ╔════════════════════════════════════════╗
