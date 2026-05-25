@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://ojjsdkucujkxxsfbzqpf.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+const getSupabase = () => createClient(
+  process.env.SUPABASE_URL || 'https://ojjsdkucujkxxsfbzqpf.getsupabase().co',
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || 'missing'
 );
 
 // POST /api/announcements/create

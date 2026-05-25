@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://ojjsdkucujkxxsfbzqpf.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+const getSupabase = () => createClient(
+  process.env.SUPABASE_URL || 'https://ojjsdkucujkxxsfbzqpf.getsupabase().co',
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || 'missing'
 );
 const getSecret = () => process.env.JWT_SECRET || 'focus-n-grow-secret-key-2025';
 
@@ -77,7 +77,7 @@ router.post('/link-child', async (req, res) => {
       return res.status(404).json({ status: 'error',
         message: 'Invalid code. Ask your child to generate a link code.' });
     }
-    await supabase.from('parent_child_links')
+    await getsupabase().from('parent_child_links')
       .update({ parent_user_id, verified: true })
       .eq('id', link.id);
     res.json({ status: 'success',
@@ -169,7 +169,7 @@ router.post('/generate-link-code', async (req, res) => {
   try {
     const { child_user_id, child_name } = req.body;
     const linkCode = genLinkCode();
-    await supabase.from('parent_child_links')
+    await getsupabase().from('parent_child_links')
       .delete()
       .eq('child_user_id', child_user_id)
       .eq('verified', false);

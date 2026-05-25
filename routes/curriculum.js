@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://ojjsdkucujkxxsfbzqpf.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+const getSupabase = () => createClient(
+  process.env.SUPABASE_URL || 'https://ojjsdkucujkxxsfbzqpf.getsupabase().co',
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || 'missing'
 );
 
 // POST /api/curriculum/add
@@ -33,7 +33,7 @@ router.post('/add', async (req, res) => {
 router.get('/class/:class_id', async (req, res) => {
   try {
     const { week, term } = req.query;
-    let query = supabase.from('curriculum_topics')
+    let query = getsupabase().from('curriculum_topics')
       .select().eq('class_id', req.params.class_id)
       .order('week_number').order('subject');
     if (week) query = query.eq('week_number', week);
