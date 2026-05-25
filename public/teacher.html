@@ -5,119 +5,236 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Focus N Grow — Teacher Dashboard</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; }
-  .login-screen { display: flex; justify-content: center; align-items: center;
-    min-height: 100vh; padding: 20px; }
-  .card { background: #1e1e2e; border-radius: 16px; padding: 32px;
-    width: 100%; max-width: 400px; }
-  h1 { font-size: 24px; margin-bottom: 8px; }
-  h2 { font-size: 20px; margin-bottom: 20px; color: #6c63ff; }
-  .subtitle { color: #888; font-size: 14px; margin-bottom: 28px; }
-  input, select, textarea { width: 100%; padding: 12px 16px;
-    background: #2d2d3d; border: 1px solid #444; border-radius: 10px;
-    color: #fff; font-size: 14px; margin-bottom: 14px; outline: none; }
-  input:focus, select:focus, textarea:focus { border-color: #6c63ff; }
-  button { width: 100%; padding: 14px; background: #6c63ff;
-    color: #fff; border: none; border-radius: 10px; font-size: 16px;
-    font-weight: bold; cursor: pointer; }
-  button:hover { background: #5a52e0; }
-  .btn-secondary { background: transparent; border: 2px solid #6c63ff;
-    color: #6c63ff; margin-top: 10px; }
-  .nav { background: #1e1e2e; padding: 16px 24px;
-    display: flex; align-items: center; justify-content: space-between; }
-  .nav h1 { font-size: 18px; }
-  .nav span { color: #888; font-size: 14px; cursor: pointer; }
-  .main { padding: 24px; max-width: 900px; margin: 0 auto; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px; margin-bottom: 28px; }
-  .stat { background: #1e1e2e; border-radius: 12px; padding: 20px; text-align: center; }
-  .stat .num { font-size: 36px; font-weight: bold; color: #6c63ff; }
-  .stat .label { color: #888; font-size: 13px; margin-top: 4px; }
-  .section { background: #1e1e2e; border-radius: 14px; padding: 20px;
-    margin-bottom: 20px; }
-  .section h3 { margin-bottom: 16px; font-size: 16px; }
-  .assignment { background: #2d2d3d; border-radius: 10px; padding: 14px;
-    margin-bottom: 10px; display: flex; justify-content: space-between;
-    align-items: center; }
-  .assignment .title { font-weight: 600; font-size: 14px; }
-  .assignment .meta { color: #888; font-size: 12px; margin-top: 3px; }
-  .badge { background: #6c63ff22; color: #6c63ff; padding: 4px 10px;
-    border-radius: 20px; font-size: 12px; }
-  .error { color: #ff6b6b; font-size: 13px; margin-bottom: 10px; }
-  .success { color: #4caf50; font-size: 13px; margin-bottom: 10px; }
-  #loginScreen { display: flex; }
-  #dashboard { display: none; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#fff;min-height:100vh}
+  .login{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+  .card{background:#1e1e2e;border-radius:16px;padding:32px;width:100%;max-width:420px}
+  h1{font-size:22px;margin-bottom:6px}
+  h2{font-size:18px;color:#6c63ff;margin-bottom:16px}
+  p.sub{color:#888;font-size:13px;margin-bottom:24px}
+  input,select,textarea{width:100%;padding:11px 14px;background:#2d2d3d;border:1px solid #444;
+    border-radius:10px;color:#fff;font-size:14px;margin-bottom:12px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:#6c63ff}
+  textarea{resize:vertical;min-height:70px}
+  .btn{width:100%;padding:13px;background:#6c63ff;color:#fff;border:none;
+    border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer}
+  .btn:hover{background:#5a52e0}
+  .btn-teal{background:#03dac6;color:#000}
+  .btn-teal:hover{background:#00bfae}
+  .btn-sm{width:auto;padding:6px 14px;font-size:12px;font-weight:600;
+    border:none;border-radius:8px;cursor:pointer}
+  .nav{background:#1e1e2e;padding:14px 24px;display:flex;
+    justify-content:space-between;align-items:center;
+    border-bottom:1px solid #2a2a3d;position:sticky;top:0;z-index:100}
+  .nav h1{font-size:17px;color:#6c63ff}
+  .nav span{color:#888;font-size:13px;cursor:pointer}
+  .nav span:hover{color:#fff}
+  .main{padding:20px;max-width:900px;margin:0 auto}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .tab{padding:8px 18px;border-radius:20px;font-size:13px;cursor:pointer;
+    border:1px solid #444;color:#888;background:transparent;font-weight:600}
+  .tab.active{background:#6c63ff;color:#fff;border-color:#6c63ff}
+  .tab-content{display:none}
+  .tab-content.show{display:block}
+  .section{background:#1e1e2e;border-radius:14px;padding:20px;margin-bottom:16px;
+    border:1px solid #2a2a3d}
+  .section h3{margin-bottom:14px;font-size:15px;color:#ccc}
+  .item{background:#2d2d3d;border-radius:10px;padding:14px;margin-bottom:10px}
+  .item-title{font-weight:600;font-size:14px;margin-bottom:4px}
+  .item-meta{color:#888;font-size:12px}
+  .badge{padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold}
+  .b-green{background:#4caf5022;color:#4caf50}
+  .b-orange{background:#ff980022;color:#ff9800}
+  .b-purple{background:#6c63ff22;color:#6c63ff}
+  .err{color:#ff6b6b;font-size:13px;margin-bottom:8px;display:none}
+  .suc{color:#4caf50;font-size:13px;margin-bottom:8px;display:none}
+  .mood-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+  .mood-card{background:#2d2d3d;border-radius:10px;padding:14px;text-align:center}
+  .mood-card .emoji{font-size:28px}
+  .mood-card .count{font-size:22px;font-weight:bold;margin:4px 0}
+  .mood-card .label{font-size:11px;color:#888}
+  .stat-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .stat-box{background:#2d2d3d;border-radius:10px;padding:14px;flex:1;min-width:100px;text-align:center}
+  .stat-box .n{font-size:28px;font-weight:bold;color:#6c63ff}
+  .stat-box .l{font-size:11px;color:#888;margin-top:2px}
+  #loginScreen{display:flex}
+  #dashboard{display:none}
+  .ann-item{background:#2d2d3d;border-radius:10px;padding:12px;margin-bottom:8px}
+  .ann-title{font-weight:bold;font-size:14px;margin-bottom:4px}
+  .ann-msg{color:#bbb;font-size:13px;margin-bottom:4px}
+  .ann-date{color:#666;font-size:11px}
+  .cur-item{background:#2d2d3d;border-radius:10px;padding:12px;margin-bottom:8px;
+    display:flex;justify-content:space-between;align-items:center}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginScreen" class="login-screen">
+<div id="loginScreen" class="login">
   <div class="card">
     <h1>🎓 Focus N Grow</h1>
-    <h2>Teacher Login</h2>
-    <p class="subtitle">Sign in to manage your class assignments</p>
-    <div id="loginError" class="error" style="display:none"></div>
+    <h2>Teacher Dashboard</h2>
+    <p class="sub">Sign in to manage your class</p>
+    <div id="loginErr" class="err"></div>
     <input type="email" id="loginEmail" placeholder="Your email address">
-    <input type="password" id="loginPassword" placeholder="Your password">
-    <button onclick="login()">Sign In</button>
+    <input type="password" id="loginPass" placeholder="Your password"
+      onkeydown="if(event.key==='Enter')login()">
+    <button class="btn" onclick="login()">Sign In</button>
+    <p style="text-align:center;margin-top:14px;color:#888;font-size:13px">
+      Don't have an account?
+      <span style="color:#6c63ff;cursor:pointer" onclick="showRegister()">
+        Register here</span>
+    </p>
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div id="dashboard">
   <div class="nav">
     <h1>🎓 Teacher Dashboard</h1>
-    <span onclick="logout()">👤 <span id="teacherName"></span> — Logout</span>
+    <span onclick="logout()">👤 <span id="tName"></span> &nbsp;|&nbsp; Logout</span>
   </div>
   <div class="main">
-    <div class="stats">
-      <div class="stat">
-        <div class="num" id="totalAssignments">0</div>
-        <div class="label">Assignments Created</div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('assignments')">📋 Assignments</button>
+      <button class="tab" onclick="showTab('curriculum')">📚 Curriculum</button>
+      <button class="tab" onclick="showTab('announcements')">📢 Announcements</button>
+      <button class="tab" onclick="showTab('mood')">😊 Mood Pulse</button>
+    </div>
+
+    <!-- ASSIGNMENTS TAB -->
+    <div id="tab-assignments" class="tab-content show">
+      <div class="section">
+        <h3>➕ Create Assignment</h3>
+        <div id="assignErr" class="err"></div>
+        <div id="assignSuc" class="suc"></div>
+        <input type="text" id="aClassId" placeholder="Class ID (from Admin panel — optional)">
+        <input type="text" id="aSubject" placeholder="Subject (e.g. Mathematics)">
+        <input type="text" id="aTitle" placeholder="Assignment title">
+        <textarea id="aDesc" placeholder="Instructions for students (optional)"></textarea>
+        <input type="number" id="aMinutes" placeholder="Minimum focus minutes" value="45">
+        <input type="date" id="aDueDate">
+        <button class="btn" onclick="createAssignment()">Create Assignment</button>
       </div>
-      <div class="stat">
-        <div class="num" id="totalCompletions">0</div>
-        <div class="label">Completions</div>
+
+      <div class="section">
+        <h3>🎯 Set Weekly Study Target</h3>
+        <div id="targetErr" class="err"></div>
+        <div id="targetSuc" class="suc"></div>
+        <input type="text" id="tSubject" placeholder="Subject (e.g. Chemistry)">
+        <input type="number" id="tHours" placeholder="Hours per week" value="3">
+        <button class="btn btn-teal" onclick="setWeeklyTarget()">Set Target</button>
+      </div>
+
+      <div class="section">
+        <h3>📋 My Assignments</h3>
+        <div id="assignList">
+          <p style="color:#888;font-size:14px">Loading...</p>
+        </div>
       </div>
     </div>
 
-    <!-- Create Assignment -->
-    <div class="section">
-      <h3>➕ Create New Assignment</h3>
-      <div id="assignMsg" style="display:none"></div>
-      <input type="text" id="aClassId" placeholder="Class ID (from Admin panel — optional)">
-      <input type="text" id="aSubject" placeholder="Subject (e.g. Mathematics)">
-      <input type="text" id="aTitle" placeholder="Assignment title">
-      <textarea id="aDesc" rows="2"
-        placeholder="Instructions for students (optional)"></textarea>
-      <input type="number" id="aMinutes" placeholder="Minimum focus minutes (e.g. 45)"
-        value="30">
-      <input type="date" id="aDueDate">
-      <button onclick="createAssignment()">Create Assignment</button>
-    </div>
+    <!-- CURRICULUM TAB -->
+    <div id="tab-curriculum" class="tab-content">
+      <div class="section">
+        <h3>📚 Upload This Week's Topics</h3>
+        <p style="color:#888;font-size:12px;margin-bottom:14px">
+          Tell students exactly what they should be studying this week.
+          This appears in their School Mode dashboard.
+        </p>
+        <div id="curErr" class="err"></div>
+        <div id="curSuc" class="suc"></div>
+        <input type="text" id="cSubject" placeholder="Subject (e.g. Physics)">
+        <input type="text" id="cTopic" placeholder="Topic (e.g. Electromagnetic Induction)">
+        <input type="number" id="cWeek" placeholder="Week number (e.g. 5)" value="1">
+        <select id="cTerm">
+          <option value="1st Term">1st Term (Sep–Dec)</option>
+          <option value="2nd Term">2nd Term (Jan–Mar)</option>
+          <option value="3rd Term">3rd Term (Apr–Jul)</option>
+        </select>
+        <textarea id="cResources"
+          placeholder="Study resources (optional): textbook pages, YouTube links, etc."></textarea>
+        <button class="btn" onclick="addTopic()">Upload Topic</button>
+      </div>
 
-    <!-- My Assignments -->
-    <div class="section">
-      <h3>📋 My Assignments</h3>
-      <div id="assignmentsList">
-        <p style="color:#888; font-size:14px">Loading...</p>
-<!-- Weekly Targets -->
-    <div class="section">
-      <h3>🎯 Set Weekly Study Targets</h3>
-      <p style="color:#888;font-size:13px;margin-bottom:14px">
-        Tell students how many hours per week to study each subject
-      </p>
-      <div id="targetMsg" style="display:none"></div>
-      <input type="text" id="tSubject" placeholder="Subject (e.g. Mathematics)">
-      <input type="number" id="tHours" placeholder="Hours per week (e.g. 3)" value="3" min="1" max="20">
-      <button onclick="setWeeklyTarget()" style="background:#03dac6;color:#000">
-        Set Weekly Target
-      </button>
-    </div>
+      <div class="section">
+        <h3>📖 Current Week Topics</h3>
+        <div id="topicList">
+          <p style="color:#888;font-size:14px">Loading...</p>
+        </div>
       </div>
     </div>
+
+    <!-- ANNOUNCEMENTS TAB -->
+    <div id="tab-announcements" class="tab-content">
+      <div class="section">
+        <h3>📢 Send Announcement to Students</h3>
+        <div id="annErr" class="err"></div>
+        <div id="annSuc" class="suc"></div>
+        <input type="text" id="annTitle"
+          placeholder="Title (e.g. Test tomorrow — prepare!)">
+        <textarea id="annMsg"
+          placeholder="Your message to students..."></textarea>
+        <button class="btn" onclick="sendAnnouncement()">Send Announcement</button>
+      </div>
+      <div class="section">
+        <h3>📬 Previous Announcements</h3>
+        <div id="annList">
+          <p style="color:#888;font-size:14px">Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOOD PULSE TAB -->
+    <div id="tab-mood" class="tab-content">
+      <div class="section">
+        <h3>😊 Class Mood This Week</h3>
+        <p style="color:#888;font-size:12px;margin-bottom:14px">
+          How students are feeling about their workload.
+          If "Overwhelmed" is high — consider reducing assignments this week.
+        </p>
+        <div class="mood-grid">
+          <div class="mood-card">
+            <div class="emoji">😊</div>
+            <div class="count c-green" id="mGreat">—</div>
+            <div class="label">Great</div>
+          </div>
+          <div class="mood-card">
+            <div class="emoji">🙂</div>
+            <div class="count" style="color:#03dac6" id="mOk">—</div>
+            <div class="label">OK</div>
+          </div>
+          <div class="mood-card">
+            <div class="emoji">😕</div>
+            <div class="count" style="color:#ff9800" id="mStruggling">—</div>
+            <div class="label">Struggling</div>
+          </div>
+          <div class="mood-card" style="border:2px solid #cf667922">
+            <div class="emoji">😩</div>
+            <div class="count" style="color:#cf6679" id="mOverwhelmed">—</div>
+            <div class="label">Overwhelmed</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>📊 Class Study Stats This Week</h3>
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="n" id="statHours">—</div>
+            <div class="l">Total Hours</div>
+          </div>
+          <div class="stat-box">
+            <div class="n" id="statCompleted">—</div>
+            <div class="l">Assignments Done</div>
+          </div>
+          <div class="stat-box">
+            <div class="n" id="statStudents">—</div>
+            <div class="l">Active Students</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -126,118 +243,227 @@ const BASE = '';
 let token = localStorage.getItem('teacher_token');
 let teacherId = localStorage.getItem('teacher_id');
 let teacherName = localStorage.getItem('teacher_name');
+let schoolId = localStorage.getItem('teacher_school_id');
 
 if (token) showDashboard();
 
 async function login() {
   const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value.trim();
-  if (!email || !password) return showError('loginError', 'Please fill in all fields');
-
+  const pass = document.getElementById('loginPass').value.trim();
+  if (!email || !pass) return showErr('loginErr','Fill in all fields');
   try {
     const res = await fetch(BASE + '/api/teacher/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password: pass }),
     });
     const data = await res.json();
     if (data.status === 'success') {
       token = data.token;
       teacherName = data.name;
-      teacherId = data.id || data.userId;
+      teacherId = data.id;
       localStorage.setItem('teacher_token', token);
       localStorage.setItem('teacher_name', teacherName);
       localStorage.setItem('teacher_id', teacherId);
       showDashboard();
     } else {
-      showError('loginError', data.message || 'Login failed');
+      showErr('loginErr', data.message || 'Login failed');
     }
-  } catch (e) {
-    showError('loginError', 'Connection error. Try again.');
-  }
+  } catch(e) { showErr('loginErr', 'Connection error'); }
+}
+
+function showRegister() {
+  alert('To register as a teacher:\n\n1. Ask your school admin to create an account for you\n2. Or register as a regular user on the Focus N Grow app\n3. Your school admin will link your account to the school');
 }
 
 function showDashboard() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
-  document.getElementById('teacherName').textContent = teacherName || 'Teacher';
+  document.getElementById('tName').textContent = teacherName || 'Teacher';
+  loadAll();
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('show'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('show');
+  event.target.classList.add('active');
+}
+
+async function loadAll() {
   loadAssignments();
+  loadAnnouncements();
+  loadTopics();
+  loadMoodStats();
 }
 
 async function loadAssignments() {
   if (!teacherId) return;
   try {
-    const res = await fetch(BASE + '/api/teacher/' + teacherId + '/assignments', {
-      headers: { 'Authorization': 'Bearer ' + token },
-    });
+    const res = await fetch(BASE + '/api/teacher/' + teacherId + '/assignments');
     const data = await res.json();
-    const list = document.getElementById('assignmentsList');
-    document.getElementById('totalAssignments').textContent =
-      data.data?.length || 0;
-
+    const el = document.getElementById('assignList');
     if (!data.data?.length) {
-      list.innerHTML = '<p style="color:#888;font-size:14px">No assignments yet.</p>';
+      el.innerHTML = '<p style="color:#888;font-size:13px">No assignments yet.</p>';
       return;
     }
-    list.innerHTML = data.data.map(a => `
-      <div class="assignment">
-        <div>
-          <div class="title">${a.subject}: ${a.title}</div>
-          <div class="meta">Min. ${a.minimum_focus_minutes} mins focus
-            ${a.due_date ? '| Due: ' + new Date(a.due_date).toLocaleDateString() : ''}</div>
+    el.innerHTML = data.data.map(a => `
+      <div class="item">
+        <div class="item-title">${a.subject}: ${a.title}</div>
+        <div class="item-meta">
+          ${a.minimum_focus_minutes} min focus
+          ${a.due_date ? '&nbsp;|&nbsp; Due: '+fmt(a.due_date) : ''}
+          ${a.is_weekly_target ? '&nbsp;<span class="badge b-purple">Weekly Target</span>' : ''}
         </div>
-        <span class="badge">${a.minimum_focus_minutes}min</span>
       </div>
     `).join('');
-  } catch (e) {
-    document.getElementById('assignmentsList').innerHTML =
-      '<p style="color:#ff6b6b">Failed to load</p>';
-  }
+  } catch(e) {}
 }
 
 async function createAssignment() {
   const subject = document.getElementById('aSubject').value.trim();
   const title = document.getElementById('aTitle').value.trim();
   const desc = document.getElementById('aDesc').value.trim();
-  const minutes = parseInt(document.getElementById('aMinutes').value) || 30;
+  const mins = parseInt(document.getElementById('aMinutes').value) || 45;
   const due = document.getElementById('aDueDate').value;
-
-  if (!subject || !title) {
-    showMsg('assignMsg', 'Subject and title are required', 'error');
-    return;
-  }
-
+  const classId = document.getElementById('aClassId').value.trim() || null;
+  if (!subject || !title) return showErr('assignErr','Subject and title required');
   try {
     const res = await fetch(BASE + '/api/teacher/assignment/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token,
-      },
-      body: JSON.stringify({
-        teacher_id: teacherId,
-        class_id: document.getElementById('aClassId').value.trim() || null,
-        subject, title,
-        description: desc,
-        minimum_focus_minutes: minutes,
-        due_date: due || null,
-      }),
+      method:'POST', headers:{'Content-Type':'application/json',
+        'Authorization':'Bearer '+token},
+      body: JSON.stringify({ teacher_id:teacherId, class_id:classId,
+        subject, title, description:desc,
+        minimum_focus_minutes:mins, due_date:due||null }),
     });
     const data = await res.json();
-    if (data.status === 'success') {
-      showMsg('assignMsg', 'Assignment created!', 'success');
-      document.getElementById('aSubject').value = '';
-      document.getElementById('aTitle').value = '';
-      document.getElementById('aDesc').value = '';
-      document.getElementById('aMinutes').value = '30';
-      document.getElementById('aDueDate').value = '';
+    if (data.status==='success') {
+      showSuc('assignSuc','Assignment created!');
+      document.getElementById('aSubject').value='';
+      document.getElementById('aTitle').value='';
+      document.getElementById('aDesc').value='';
+      document.getElementById('aDueDate').value='';
       loadAssignments();
-    } else {
-      showMsg('assignMsg', data.message || 'Failed', 'error');
+    } else showErr('assignErr', data.message||'Failed');
+  } catch(e) { showErr('assignErr','Connection error'); }
+}
+
+async function setWeeklyTarget() {
+  const subject = document.getElementById('tSubject').value.trim();
+  const hours = parseInt(document.getElementById('tHours').value) || 3;
+  if (!subject) return showErr('targetErr','Enter a subject');
+  try {
+    const res = await fetch(BASE + '/api/school/weekly-target/set', {
+      method:'POST', headers:{'Content-Type':'application/json',
+        'Authorization':'Bearer '+token},
+      body: JSON.stringify({ teacher_id:teacherId, subject,
+        weekly_hours:hours, class_id:null }),
+    });
+    const data = await res.json();
+    if (data.status==='success') {
+      showSuc('targetSuc',`Target set: ${hours} hrs/week for ${subject}`);
+      document.getElementById('tSubject').value='';
+      loadAssignments();
+    } else showErr('targetErr', data.message||'Failed');
+  } catch(e) { showErr('targetErr','Connection error'); }
+}
+
+async function addTopic() {
+  const subject = document.getElementById('cSubject').value.trim();
+  const topic = document.getElementById('cTopic').value.trim();
+  const week = parseInt(document.getElementById('cWeek').value) || 1;
+  const term = document.getElementById('cTerm').value;
+  const resources = document.getElementById('cResources').value.trim();
+  if (!subject || !topic) return showErr('curErr','Subject and topic required');
+  try {
+    const res = await fetch(BASE + '/api/curriculum/add', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ teacher_id:teacherId, subject, topic,
+        week_number:week, term, resources }),
+    });
+    const data = await res.json();
+    if (data.status==='success') {
+      showSuc('curSuc','Topic uploaded!');
+      document.getElementById('cSubject').value='';
+      document.getElementById('cTopic').value='';
+      document.getElementById('cResources').value='';
+      loadTopics();
+    } else showErr('curErr', data.message||'Failed');
+  } catch(e) { showErr('curErr','Connection error'); }
+}
+
+async function loadTopics() {
+  const el = document.getElementById('topicList');
+  el.innerHTML = '<p style="color:#888;font-size:13px">Loading...</p>';
+  // We'll load all topics for this teacher
+  // Since no class_id filter here, show recent ones
+  el.innerHTML = '<p style="color:#888;font-size:13px">Upload topics above to see them here.</p>';
+}
+
+async function sendAnnouncement() {
+  const title = document.getElementById('annTitle').value.trim();
+  const msg = document.getElementById('annMsg').value.trim();
+  if (!title || !msg) return showErr('annErr','Title and message required');
+  try {
+    const res = await fetch(BASE + '/api/announcements/create', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ teacher_id:teacherId, school_id:schoolId,
+        title, message:msg }),
+    });
+    const data = await res.json();
+    if (data.status==='success') {
+      showSuc('annSuc','Announcement sent!');
+      document.getElementById('annTitle').value='';
+      document.getElementById('annMsg').value='';
+      loadAnnouncements();
+    } else showErr('annErr', data.message||'Failed');
+  } catch(e) { showErr('annErr','Connection error'); }
+}
+
+async function loadAnnouncements() {
+  if (!schoolId) return;
+  try {
+    const res = await fetch(BASE + '/api/announcements/school/' + schoolId);
+    const data = await res.json();
+    const el = document.getElementById('annList');
+    if (!data.data?.length) {
+      el.innerHTML = '<p style="color:#888;font-size:13px">No announcements yet.</p>';
+      return;
     }
-  } catch (e) {
-    showMsg('assignMsg', 'Connection error', 'error');
-  }
+    el.innerHTML = data.data.map(a => `
+      <div class="ann-item">
+        <div class="ann-title">${a.title}</div>
+        <div class="ann-msg">${a.message}</div>
+        <div class="ann-date">${fmt(a.created_at)}</div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+async function loadMoodStats() {
+  if (!schoolId) return;
+  try {
+    const res = await fetch(BASE + '/api/school/' + schoolId + '/mood-pulse');
+    const data = await res.json();
+    if (data.summary) {
+      document.getElementById('mGreat').textContent = data.summary.great || 0;
+      document.getElementById('mOk').textContent = data.summary.ok || 0;
+      document.getElementById('mStruggling').textContent = data.summary.struggling || 0;
+      document.getElementById('mOverwhelmed').textContent = data.summary.overwhelmed || 0;
+    }
+    // Load assignment completion stats
+    if (teacherId) {
+      const aRes = await fetch(BASE + '/api/teacher/' + teacherId + '/assignments');
+      const aData = await aRes.json();
+      document.getElementById('statCompleted').textContent =
+        aData.data?.filter(a => a.completed)?.length || 0;
+      document.getElementById('statStudents').textContent =
+        new Set(aData.data?.map(a => a.student_user_id))?.size || '—';
+      const totalMins = aData.data?.reduce(
+        (s, a) => s + (a.minutes_studied || 0), 0) || 0;
+      document.getElementById('statHours').textContent =
+        (totalMins / 60).toFixed(1);
+    }
+  } catch(e) {}
 }
 
 function logout() {
@@ -245,45 +471,26 @@ function logout() {
   location.reload();
 }
 
-function showError(id, msg) {
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.style.display = 'block';
+function fmt(d) {
+  if (!d) return '';
+  try {
+    return new Date(d).toLocaleDateString('en-GB',
+      {day:'numeric',month:'short',year:'numeric'});
+  } catch(e) { return d; }
 }
 
-function showMsg(id, msg, type) {
+function showErr(id, msg) {
   const el = document.getElementById(id);
-  el.textContent = msg;
-  el.className = type;
-  el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 3000);
+  if (!el) return;
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display='none', 4000);
 }
-async function setWeeklyTarget() {
-  const subject = document.getElementById('tSubject').value.trim();
-  const hours = parseInt(document.getElementById('tHours').value) || 3;
-  if (!subject) return showMsg('targetMsg', 'Enter a subject', 'error');
-  try {
-    const res = await fetch(BASE + '/api/school/weekly-target/set', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({
-        teacher_id: teacherId,
-        subject, weekly_hours: hours,
-        class_id: null,
-      }),
-    });
-    const data = await res.json();
-    if (data.status === 'success') {
-      showMsg('targetMsg', `Weekly target set: ${hours} hrs of ${subject}`, 'success');
-      document.getElementById('tSubject').value = '';
-      loadAssignments();
-    } else {
-      showMsg('targetMsg', data.message || 'Failed', 'error');
-    }
-  } catch (e) {
-    showMsg('targetMsg', 'Connection error', 'error');
-  }
+
+function showSuc(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display='none', 3000);
 }
 </script>
 </body>

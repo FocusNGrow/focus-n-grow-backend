@@ -38,6 +38,9 @@ const airtimeRoutes      = require('./routes/airtime');
 const teacherRoutes = require('./routes/teacher');
 const adminRoutes  = require('./routes/admin');
 const schoolRoutes = require('./routes/school');
+const parentRoutes       = require('./routes/parent');
+const announcementRoutes = require('./routes/announcements');
+const curriculumRoutes   = require('./routes/curriculum');
 const greetingRoutes = require('./routes/greeting');
 
 const app = express();
@@ -134,6 +137,9 @@ app.get('/api/superadmin/stats', async (req, res) => {
 });
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/school', schoolRoutes);
+app.use('/api/parent',        parentRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/curriculum',    curriculumRoutes);
 app.use('/api/greeting', greetingRoutes);
 
 app.use((err, req, res, next) => {
