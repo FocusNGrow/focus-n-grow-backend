@@ -2,10 +2,17 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://ojjsdkucujkxxsfbzqpf.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
-);
+const SUPABASE_URL = 'https://ojjsdkucujkxxsfbzqpf.sb().co';
+let _sb = null;
+const sb = () => {
+  if (!_sb) {
+    const key = process.env.SUPABASE_SERVICE_KEY
+      || process.env.SUPABASE_ANON_KEY
+      || '';
+    _sb = createClient(SUPABASE_URL, key);
+  }
+  return _sb;
+};
 
 // Generate unique school code
 function generateCode() {
@@ -332,7 +339,7 @@ router.post('/generate-tokens', async (req, res) => {
     // Update max_students count on school
     const { data: school } = await supabase
       .from('schools').select('max_students').eq('id', school_id).single();
-    await supabase.from('schools')
+    await sb().from('schools')
       .update({
         max_students: (school?.max_students || 0) + quantity,
         term_expires_at: expiresAt.toISOString(),

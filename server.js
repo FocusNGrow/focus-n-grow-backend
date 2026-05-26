@@ -41,6 +41,9 @@ const schoolRoutes = require('./routes/school');
 const parentRoutes       = require('./routes/parent');
 const announcementRoutes = require('./routes/announcements');
 const curriculumRoutes   = require('./routes/curriculum');
+const referralRoutes = require('./routes/referral');
+const studyGroupRoutes = require('./routes/studygroup');
+const notificationRoutes = require('./routes/notifications');
 const greetingRoutes = require('./routes/greeting');
 
 const app = express();
@@ -140,6 +143,9 @@ app.use('/api/school', schoolRoutes);
 app.use('/api/parent',        parentRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/curriculum',    curriculumRoutes);
+app.use('/api/referral', referralRoutes);
+app.use('/api/studygroup', studyGroupRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/greeting', greetingRoutes);
 
 app.use((err, req, res, next) => {

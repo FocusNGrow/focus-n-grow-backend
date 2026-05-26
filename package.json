@@ -10,7 +10,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.38.0",
+    "@supabase/supabase-js": "^2.46.2",
     "axios": "^1.16.1",
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",

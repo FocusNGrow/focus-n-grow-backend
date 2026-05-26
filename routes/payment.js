@@ -140,4 +140,48 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
+// POST /api/payment/webhook (Flutterwave sends this after payment)
+router.post('/webhook', async (req, res) => {
+  try {
+    const hash = req.headers['verif-hash'];
+    const secretHash = process.env.FLW_WEBHOOK_HASH || 'focusngrow2025webhook';
+
+    if (hash !== secretHash) {
+      return res.status(401).send('Unauthorized');
+    }
+
+    const event = req.body;
+    if (event.event === 'charge.completed' &&
+        event.data.status === 'successful') {
+
+      const meta = event.data.meta || {};
+      const userId = meta.user_id;
+      const planType = meta.plan_type || 'basic';
+
+      if (userId) {
+        await User.update(
+          { plan_type: planType },
+          { where: { id: userId } }
+        );
+
+        // Verify referral if they came from a referral
+        try {
+          const axios = require('axios');
+          await axios.post(
+            `${process.env.APP_URL || 'https://focus-n-grow-backend-production.up.railway.app'}/api/referral/verify-subscription`,
+            { user_id: userId }
+          );
+        } catch (_) {}
+
+        console.log(`✅ Payment verified: user ${userId} upgraded to ${planType}`);
+      }
+    }
+
+    res.status(200).json({ status: 'success' });
+  } catch (e) {
+    console.error('Webhook error:', e.message);
+    res.status(500).json({ status: 'error' });
+  }
+});
+
 module.exports = router;

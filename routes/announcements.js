@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 
-const getSupabase = () => createClient(
-  process.env.SUPABASE_URL || 'https://ojjsdkucujkxxsfbzqpf.getsupabase().co',
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || 'missing'
-);
+const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.sb().co';
+const SB_KEY = () => process.env.SUPABASE_SERVICE_KEY
+  || process.env.SUPABASE_ANON_KEY || '';
+const sb = () => createClient(SB_URL, SB_KEY());
 
 // POST /api/announcements/create
 router.post('/create', async (req, res) => {
