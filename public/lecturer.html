@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus N Grow — Lecturer Dashboard</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#fff;min-height:100vh}
+  .login{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+  .card{background:#1e1e2e;border-radius:16px;padding:32px;width:100%;max-width:420px}
+  h1{font-size:22px;margin-bottom:4px}
+  h2{font-size:18px;color:#9c27b0;margin-bottom:16px}
+  p.sub{color:#888;font-size:13px;margin-bottom:24px}
+  input,select,textarea{width:100%;padding:11px 14px;background:#2d2d3d;
+    border:1px solid #444;border-radius:10px;color:#fff;font-size:14px;
+    margin-bottom:12px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:#9c27b0}
+  textarea{resize:vertical;min-height:70px}
+  .btn{width:100%;padding:13px;background:#9c27b0;color:#fff;border:none;
+    border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer}
+  .btn:hover{background:#7b1fa2}
+  .nav{background:#1e1e2e;padding:14px 24px;display:flex;
+    justify-content:space-between;align-items:center;
+    border-bottom:1px solid #2a2a3d;position:sticky;top:0;z-index:100}
+  .nav h1{font-size:17px;color:#9c27b0}
+  .nav span{color:#888;font-size:13px;cursor:pointer}
+  .nav span:hover{color:#fff}
+  .main{padding:20px;max-width:900px;margin:0 auto}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .tab{padding:8px 18px;border-radius:20px;font-size:13px;cursor:pointer;
+    border:1px solid #444;color:#888;background:transparent;font-weight:600}
+  .tab.active{background:#9c27b0;color:#fff;border-color:#9c27b0}
+  .tab-content{display:none}.tab-content.show{display:block}
+  .section{background:#1e1e2e;border-radius:14px;padding:20px;
+    margin-bottom:16px;border:1px solid #2a2a3d}
+  .section h3{margin-bottom:14px;font-size:15px;color:#ccc}
+  .item{background:#2d2d3d;border-radius:10px;padding:14px;margin-bottom:10px}
+  .item-title{font-weight:600;font-size:14px;margin-bottom:4px}
+  .item-meta{color:#888;font-size:12px}
+  .badge{padding:3px 8px;border-radius:10px;font-size:11px;font-weight:bold}
+  .b-cat{background:#ff980022;color:#ff9800}
+  .b-exam{background:#cf667922;color:#cf6679}
+  .b-hw{background:#6c63ff22;color:#6c63ff}
+  .err{color:#ff6b6b;font-size:13px;margin-bottom:8px;display:none}
+  .suc{color:#4caf50;font-size:13px;margin-bottom:8px;display:none}
+  .course-chip{display:inline-block;padding:4px 12px;background:#9c27b022;
+    color:#9c27b0;border-radius:12px;font-size:12px;font-weight:bold;
+    margin-right:8px;margin-bottom:6px;cursor:pointer;border:1px solid #9c27b033}
+  .course-chip.selected{background:#9c27b0;color:#fff}
+  #loginScreen{display:flex}#dashboard{display:none}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login">
+  <div class="card">
+    <h1>🎓 Focus N Grow</h1>
+    <h2>Lecturer Dashboard</h2>
+    <p class="sub">Manage your courses and student assignments</p>
+    <div id="loginErr" class="err"></div>
+    <input type="email" id="loginEmail" placeholder="Your email address">
+    <input type="password" id="loginPass" placeholder="Your password"
+      onkeydown="if(event.key==='Enter')login()">
+    <button class="btn" onclick="login()">Sign In</button>
+  </div>
+</div>
+
+<div id="dashboard">
+  <div class="nav">
+    <h1>🎓 Lecturer Dashboard — Focus N Grow</h1>
+    <span onclick="logout()">👤 <span id="lName"></span> | Logout</span>
+  </div>
+  <div class="main">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('courses')">📚 My Courses</button>
+      <button class="tab" onclick="showTab('assignments')">📋 Assignments</button>
+      <button class="tab" onclick="showTab('create')">➕ Create Course</button>
+    </div>
+
+    <!-- COURSES TAB -->
+    <div id="tab-courses" class="tab-content show">
+      <div class="section">
+        <h3>📚 My Courses</h3>
+        <p style="color:#888;font-size:12px;margin-bottom:14px">
+          Click a course to select it before creating assignments
+        </p>
+        <div id="courseChips">
+          <p style="color:#888">Loading...</p></div>
+      </div>
+      <div class="section">
+        <h3>📊 Course Stats</h3>
+        <div id="courseStats">
+          <p style="color:#888">Select a course above</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ASSIGNMENTS TAB -->
+    <div id="tab-assignments" class="tab-content">
+      <div class="section">
+        <h3>➕ Create Assignment</h3>
+        <div id="assignErr" class="err"></div>
+        <div id="assignSuc" class="suc"></div>
+        <p id="selectedCourseLabel"
+          style="color:#9c27b0;font-size:13px;margin-bottom:10px">
+          No course selected — go to My Courses tab first</p>
+        <input type="text" id="aTitle" placeholder="Assignment title">
+        <textarea id="aDesc" placeholder="Instructions (optional)"></textarea>
+        <select id="aType">
+          <option value="homework">📝 Homework</option>
+          <option value="CAT">📊 CAT (Continuous Assessment Test)</option>
+          <option value="exam_prep">🎯 Exam Preparation</option>
+        </select>
+        <input type="number" id="aMinutes" placeholder="Minimum focus minutes" value="45">
+        <input type="date" id="aDueDate">
+        <button class="btn" onclick="createAssignment()">Create Assignment</button>
+      </div>
+
+      <div class="section">
+        <h3>📋 Recent Assignments</h3>
+        <div id="assignList">
+          <p style="color:#888">Loading...</p></div>
+      </div>
+    </div>
+
+    <!-- CREATE COURSE TAB -->
+    <div id="tab-create" class="tab-content">
+      <div class="section">
+        <h3>🆕 Create New Course</h3>
+        <p style="color:#888;font-size:12px;margin-bottom:14px">
+          Share the course code with your students
+        </p>
+        <div id="createCourseErr" class="err"></div>
+        <div id="createCourseSuc" class="suc"></div>
+        <input type="text" id="cName" placeholder="Course name (e.g. Introduction to Programming)">
+        <input type="text" id="cCode" placeholder="Course code (e.g. CSC101) — leave blank to auto-generate">
+        <input type="number" id="cUnits" placeholder="Course units" value="3">
+        <select id="cLevel">
+          <option value="100">100 Level</option>
+          <option value="200">200 Level</option>
+          <option value="300">300 Level</option>
+          <option value="400">400 Level</option>
+          <option value="500">500 Level</option>
+          <option value="PG">Postgraduate</option>
+        </select>
+        <select id="cSemester">
+          <option value="1st Semester">1st Semester</option>
+          <option value="2nd Semester">2nd Semester</option>
+        </select>
+        <button class="btn" onclick="createCourse()">Create Course</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const BASE = '';
+let token = localStorage.getItem('lecturer_token');
+let lecturerId = localStorage.getItem('lecturer_id');
+let lecturerName = localStorage.getItem('lecturer_name');
+let selectedCourseId = null;
+let selectedCourseName = null;
+
+if (token) showDashboard();
+
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!email || !pass) return;
+  try {
+    const res = await fetch(BASE + '/api/teacher/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password: pass }),
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      token = data.token;
+      lecturerId = data.id;
+      lecturerName = data.name;
+      localStorage.setItem('lecturer_token', token);
+      localStorage.setItem('lecturer_id', lecturerId);
+      localStorage.setItem('lecturer_name', lecturerName);
+      showDashboard();
+    } else {
+      const el = document.getElementById('loginErr');
+      el.textContent = data.message || 'Login failed';
+      el.style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('loginErr').textContent = 'Connection error';
+    document.getElementById('loginErr').style.display = 'block';
+  }
+}
+
+function showDashboard() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('lName').textContent = lecturerName || 'Lecturer';
+  loadCourses();
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('show'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('show');
+  event.target.classList.add('active');
+}
+
+async function loadCourses() {
+  try {
+    const res = await fetch(BASE + '/api/university/lecturer/' + lecturerId + '/courses');
+    const data = await res.json();
+    const el = document.getElementById('courseChips');
+    if (!data.data?.length) {
+      el.innerHTML = '<p style="color:#888;font-size:13px">No courses yet — create one in the Create Course tab</p>';
+      return;
+    }
+    el.innerHTML = data.data.map(c => `
+      <span class="course-chip" onclick="selectCourse('${c.id}','${c.course_name}','${c.course_code}')">
+        ${c.course_code}: ${c.course_name}
+      </span>
+    `).join('');
+    loadAssignments();
+  } catch(e) {}
+}
+
+function selectCourse(id, name, code) {
+  selectedCourseId = id;
+  selectedCourseName = name;
+  document.querySelectorAll('.course-chip').forEach(c => c.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById('selectedCourseLabel').textContent =
+    `Selected: ${code} — ${name}`;
+  document.getElementById('courseStats').innerHTML = `
+    <p style="color:#ccc">Course: <strong>${name} (${code})</strong></p>
+    <p style="color:#888;font-size:13px;margin-top:6px">
+      Create assignments in the Assignments tab</p>
+  `;
+}
+
+async function loadAssignments() {
+  const el = document.getElementById('assignList');
+  if (!lecturerId) return;
+  try {
+    const res = await fetch(BASE + '/api/teacher/' + lecturerId + '/assignments');
+    const data = await res.json();
+    if (!data.data?.length) {
+      el.innerHTML = '<p style="color:#888;font-size:13px">No assignments yet.</p>';
+      return;
+    }
+    el.innerHTML = data.data.map(a => `
+      <div class="item">
+        <div class="item-title">
+          <span class="badge b-${a.type||'hw'}">${(a.type||'homework').toUpperCase()}</span>
+          &nbsp;${a.title}
+        </div>
+        <div class="item-meta">${a.minimum_focus_minutes} min focus
+          ${a.due_date ? ' | Due: '+fmt(a.due_date) : ''}</div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+async function createAssignment() {
+  if (!selectedCourseId) {
+    alert('Please select a course first from the My Courses tab');
+    return;
+  }
+  const title = document.getElementById('aTitle').value.trim();
+  const desc = document.getElementById('aDesc').value.trim();
+  const type = document.getElementById('aType').value;
+  const mins = parseInt(document.getElementById('aMinutes').value) || 45;
+  const due = document.getElementById('aDueDate').value;
+  if (!title) return showMsg('assignErr', 'Title required');
+  try {
+    const res = await fetch(BASE + '/api/university/assignment/create', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ course_id: selectedCourseId,
+        lecturer_user_id: lecturerId, title, description: desc,
+        type, minimum_focus_minutes: mins, due_date: due || null }),
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showMsg('assignSuc', '✅ Assignment created!');
+      document.getElementById('aTitle').value = '';
+      document.getElementById('aDesc').value = '';
+      loadAssignments();
+    } else showMsg('assignErr', data.message || 'Failed');
+  } catch(e) { showMsg('assignErr', 'Connection error'); }
+}
+
+async function createCourse() {
+  const name = document.getElementById('cName').value.trim();
+  const code = document.getElementById('cCode').value.trim();
+  const units = parseInt(document.getElementById('cUnits').value) || 3;
+  const level = document.getElementById('cLevel').value;
+  const semester = document.getElementById('cSemester').value;
+  if (!name) return showMsg('createCourseErr', 'Course name required');
+  try {
+    const res = await fetch(BASE + '/api/university/course/create', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ lecturer_user_id: lecturerId,
+        course_name: name, course_code: code || null,
+        course_units: units, level, semester }),
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      const code = data.data.course_code;
+      showMsg('createCourseSuc',
+        `✅ Course created! Code: ${code} — Share this with students`);
+      document.getElementById('cName').value = '';
+      document.getElementById('cCode').value = '';
+      loadCourses();
+    } else showMsg('createCourseErr', data.message || 'Failed');
+  } catch(e) { showMsg('createCourseErr', 'Connection error'); }
+}
+
+function logout() {
+  localStorage.removeItem('lecturer_token');
+  localStorage.removeItem('lecturer_id');
+  localStorage.removeItem('lecturer_name');
+  location.reload();
+}
+
+function showMsg(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function fmt(d) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString('en-GB',
+    {day:'numeric',month:'short',year:'numeric'}); } catch(e) { return d; }
+}
+</script>
+</body>
+</html> 
