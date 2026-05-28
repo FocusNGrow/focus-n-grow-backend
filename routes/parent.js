@@ -5,11 +5,15 @@ const User = require('../models/User');
 const { createClient } = require('@supabase/supabase-js');
 
 const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.sb().co';
-const SB_KEY = () => process.env.SUPABASE_SERVICE_KEY
-  || process.env.SUPABASE_ANON_KEY || '';
-const sb = () => createClient(SB_URL, SB_KEY());
-
+const sb = () => createClient(
+  SB_URL,
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || ''
+);
 const getSecret = () => process.env.JWT_SECRET || 'focus-n-grow-secret-key-2025';
+
+function genLinkCode() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 
 // Generate 6-digit link code
 function genLinkCode() {
