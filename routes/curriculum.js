@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 
-const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.sb().co';
+const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.supabase.co';
 const SB_KEY = () => process.env.SUPABASE_SERVICE_KEY
   || process.env.SUPABASE_ANON_KEY || '';
 const sb = () => createClient(SB_URL, SB_KEY());
@@ -16,7 +16,7 @@ router.post('/add', async (req, res) => {
       return res.status(400).json({ status: 'error',
         message: 'Subject, topic and teacher_id required' });
     }
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('curriculum_topics')
       .insert({ class_id, teacher_id, subject, topic,
         week_number: week_number || 1, term: term || '1st Term',
@@ -33,7 +33,7 @@ router.post('/add', async (req, res) => {
 router.get('/class/:class_id', async (req, res) => {
   try {
     const { week, term } = req.query;
-    let query = getsupabase().from('curriculum_topics')
+    let query = sb()().from('curriculum_topics')
       .select().eq('class_id', req.params.class_id)
       .order('week_number').order('subject');
     if (week) query = query.eq('week_number', week);
@@ -55,7 +55,7 @@ router.get('/current-week/:class_id', async (req, res) => {
       (now - sept1) / (7 * 24 * 60 * 60 * 1000));
     const currentWeek = Math.max(1, Math.min(weekNumber, 40));
 
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('curriculum_topics')
       .select()
       .eq('class_id', req.params.class_id)

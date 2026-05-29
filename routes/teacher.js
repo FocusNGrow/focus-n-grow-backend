@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { createClient } = require('@supabase/supabase-js');
 
-const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.sb().co';
+const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.supabase.co';
 const SB_KEY = () => process.env.SUPABASE_SERVICE_KEY
   || process.env.SUPABASE_ANON_KEY || '';
 const sb = () => createClient(SB_URL, SB_KEY());
@@ -32,7 +32,7 @@ router.post('/assignment/create', async (req, res) => {
   try {
     const { class_id, teacher_id, subject, title, description,
             minimum_focus_minutes, due_date } = req.body;
-    const { data, error } = await getsupabase().from('assignments').insert({
+    const { data, error } = await sb().from('assignments').insert({
       class_id, teacher_id, subject, title, description,
       minimum_focus_minutes: minimum_focus_minutes || 30,
       due_date,
@@ -47,7 +47,7 @@ router.post('/assignment/create', async (req, res) => {
 // GET /api/teacher/:teacher_id/assignments
 router.get('/:teacher_id/assignments', async (req, res) => {
   try {
-    const { data, error } = await getsupabase().from('assignments')
+    const { data, error } = await sb().from('assignments')
       .select().eq('teacher_id', req.params.teacher_id)
       .order('created_at', { ascending: false });
     if (error) throw error;
@@ -60,7 +60,7 @@ router.get('/:teacher_id/assignments', async (req, res) => {
 // GET /api/teacher/class/:class_id/students
 router.get('/class/:class_id/students', async (req, res) => {
   try {
-    const { data, error } = await getsupabase().from('school_enrollments')
+    const { data, error } = await sb().from('school_enrollments')
       .select('student_user_id').eq('class_id', req.params.class_id);
     if (error) throw error;
     res.json({ status: 'success', data });
@@ -72,7 +72,7 @@ router.get('/class/:class_id/students', async (req, res) => {
 // GET /api/teacher/assignment/:id/completions
 router.get('/assignment/:id/completions', async (req, res) => {
   try {
-    const { data, error } = await getsupabase().from('assignment_completions')
+    const { data, error } = await sb().from('assignment_completions')
       .select().eq('assignment_id', req.params.id);
     if (error) throw error;
     res.json({ status: 'success', data });

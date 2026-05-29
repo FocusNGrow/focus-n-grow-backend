@@ -1,18 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
+const User = require('../models/User');
 
-const SUPABASE_URL = 'https://ojjsdkucujkxxsfbzqpf.sb().co';
-let _sb = null;
-const sb = () => {
-  if (!_sb) {
-    const key = process.env.SUPABASE_SERVICE_KEY
-      || process.env.SUPABASE_ANON_KEY
-      || '';
-    _sb = createClient(SUPABASE_URL, key);
-  }
-  return _sb;
-};
+const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.supabase.co';
+const sb = () => createClient(
+  SB_URL,
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || ''
+);
 
 // Generate unique school code
 function generateCode() {
@@ -27,7 +22,7 @@ router.post('/create', async (req, res) => {
       return res.status(400).json({ status: 'error', message: 'School name and admin required' });
     }
     const school_code = generateCode();
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('schools')
       .insert({ name, address, state, admin_user_id, school_code })
       .select()
@@ -52,7 +47,7 @@ router.post('/join', async (req, res) => {
     }
 
     // Find the token
-    const { data: tokenRecord, error: tokenErr } = await supabase
+    const { data: tokenRecord, error: tokenErr } = await sb()
       .from('school_student_tokens')
       .select('*, schools(*)')
       .eq('token', student_token.toUpperCase())
@@ -95,7 +90,7 @@ router.post('/join', async (req, res) => {
     }
 
     // Mark token as used
-    await supabase
+    await sb()
       .from('school_student_tokens')
       .update({
         used: true,
@@ -105,7 +100,7 @@ router.post('/join', async (req, res) => {
       .eq('id', tokenRecord.id);
 
     // Enroll student
-    const { data: enrollment } = await supabase
+    const { data: enrollment } = await sb()
       .from('school_enrollments')
       .insert({
         school_id: tokenRecord.school_id,
@@ -115,12 +110,12 @@ router.post('/join', async (req, res) => {
       .single();
 
     // Update enrolled count
-    const { data: school } = await supabase
+    const { data: school } = await sb()
       .from('schools')
       .select('students_enrolled')
       .eq('id', tokenRecord.school_id)
       .single();
-    await supabase
+    await sb()
       .from('schools')
       .update({ students_enrolled: (school?.students_enrolled || 0) + 1 })
       .eq('id', tokenRecord.school_id);
@@ -147,7 +142,7 @@ router.post('/join', async (req, res) => {
 // GET /api/school/:school_id/classes
 router.get('/:school_id/classes', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('school_classes')
       .select()
       .eq('school_id', req.params.school_id);
@@ -162,7 +157,7 @@ router.get('/:school_id/classes', async (req, res) => {
 router.post('/class/create', async (req, res) => {
   try {
     const { school_id, name, grade_level, teacher_id } = req.body;
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('school_classes')
       .insert({ school_id, name, grade_level, teacher_id })
       .select()
@@ -177,13 +172,13 @@ router.post('/class/create', async (req, res) => {
 // GET /api/school/student/:user_id/assignments
 router.get('/student/:user_id/assignments', async (req, res) => {
   try {
-    const { data: enrollments } = await supabase
+    const { data: enrollments } = await sb()
       .from('school_enrollments')
       .select('class_id')
       .eq('student_user_id', req.params.user_id);
     if (!enrollments?.length) return res.json({ status: 'success', data: [] });
     const classIds = enrollments.map(e => e.class_id);
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('assignments')
       .select()
       .in('class_id', classIds)
@@ -199,7 +194,7 @@ router.get('/student/:user_id/assignments', async (req, res) => {
 router.post('/assignment/complete', async (req, res) => {
   try {
     const { assignment_id, student_user_id, minutes_studied } = req.body;
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('assignment_completions')
       .upsert({
         assignment_id,
@@ -220,7 +215,7 @@ router.post('/assignment/complete', async (req, res) => {
 // GET /api/school/:school_id/mood-pulse (for admin dashboard)
 router.get('/:school_id/mood-pulse', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('school_mood_logs')
       .select()
       .eq('school_id', req.params.school_id)
@@ -240,7 +235,7 @@ router.get('/:school_id/mood-pulse', async (req, res) => {
 router.post('/mood', async (req, res) => {
   try {
     const { student_user_id, school_id, class_id, mood } = req.body;
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('school_mood_logs')
       .insert({ student_user_id, school_id, class_id, mood })
       .select()
@@ -254,7 +249,7 @@ router.post('/mood', async (req, res) => {
 // GET /api/school/:school_id/leaderboard
 router.get('/:school_id/leaderboard', async (req, res) => {
   try {
-    const { data: completions, error } = await supabase
+    const { data: completions, error } = await sb()
       .from('assignment_completions')
       .select('student_user_id, minutes_studied')
       .eq('completed', true);
@@ -286,7 +281,7 @@ router.get('/:school_id/leaderboard', async (req, res) => {
 router.post('/weekly-target/set', async (req, res) => {
   try {
     const { class_id, subject, weekly_hours, teacher_id } = req.body;
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('assignments')
       .insert({
         class_id, teacher_id, subject,
@@ -329,7 +324,7 @@ router.post('/generate-tokens', async (req, res) => {
       }
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('school_student_tokens')
       .insert(tokens)
       .select();
@@ -337,7 +332,7 @@ router.post('/generate-tokens', async (req, res) => {
     if (error) throw error;
 
     // Update max_students count on school
-    const { data: school } = await supabase
+    const { data: school } = await sb()
       .from('schools').select('max_students').eq('id', school_id).single();
     await sb().from('schools')
       .update({
@@ -360,7 +355,7 @@ router.post('/generate-tokens', async (req, res) => {
 // GET /api/school/:school_id/tokens (super admin views token usage)
 router.get('/:school_id/tokens', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('school_student_tokens')
       .select()
       .eq('school_id', req.params.school_id)

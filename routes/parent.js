@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { createClient } = require('@supabase/supabase-js');
 
-const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.sb().co';
+const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.supabase.co';
 const sb = () => createClient(
   SB_URL,
   process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || ''
@@ -72,7 +72,7 @@ router.post('/login', async (req, res) => {
 router.post('/link-child', async (req, res) => {
   try {
     const { parent_user_id, link_code } = req.body;
-    const { data: link, error } = await supabase
+    const { data: link, error } = await sb()
       .from('parent_child_links')
       .select('*, child_name')
       .eq('link_code', link_code.toUpperCase())
@@ -82,7 +82,7 @@ router.post('/link-child', async (req, res) => {
       return res.status(404).json({ status: 'error',
         message: 'Invalid code. Ask your child to generate a link code.' });
     }
-    await getsupabase().from('parent_child_links')
+    await sb()().from('parent_child_links')
       .update({ parent_user_id, verified: true })
       .eq('id', link.id);
     res.json({ status: 'success',
@@ -95,7 +95,7 @@ router.post('/link-child', async (req, res) => {
 // GET /api/parent/:parent_id/children
 router.get('/:parent_id/children', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('parent_child_links')
       .select()
       .eq('parent_user_id', req.params.parent_id)
@@ -120,7 +120,7 @@ router.get('/child/:child_id/report', async (req, res) => {
 
     // Mood logs last 7 days
     const sevenDaysAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString();
-    const { data: moods } = await supabase
+    const { data: moods } = await sb()
       .from('school_mood_logs')
       .select()
       .eq('student_user_id', childId)
@@ -128,7 +128,7 @@ router.get('/child/:child_id/report', async (req, res) => {
       .order('logged_at', { ascending: false });
 
     // Assignment completions
-    const { data: completions } = await supabase
+    const { data: completions } = await sb()
       .from('assignment_completions')
       .select('*, assignments(subject, title, minimum_focus_minutes)')
       .eq('student_user_id', childId)
@@ -174,11 +174,11 @@ router.post('/generate-link-code', async (req, res) => {
   try {
     const { child_user_id, child_name } = req.body;
     const linkCode = genLinkCode();
-    await getsupabase().from('parent_child_links')
+    await sb()().from('parent_child_links')
       .delete()
       .eq('child_user_id', child_user_id)
       .eq('verified', false);
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('parent_child_links')
       .insert({ child_user_id, child_name, link_code: linkCode })
       .select().single();

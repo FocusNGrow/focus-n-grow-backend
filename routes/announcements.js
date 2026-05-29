@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 
-const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.sb().co';
+const SB_URL = 'https://ojjsdkucujkxxsfbzqpf.supabase.co';
 const SB_KEY = () => process.env.SUPABASE_SERVICE_KEY
   || process.env.SUPABASE_ANON_KEY || '';
 const sb = () => createClient(SB_URL, SB_KEY());
@@ -15,7 +15,7 @@ router.post('/create', async (req, res) => {
       return res.status(400).json({ status: 'error',
         message: 'Title, message and teacher_id required' });
     }
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('teacher_announcements')
       .insert({ school_id, class_id, teacher_id, title, message })
       .select().single();
@@ -29,7 +29,7 @@ router.post('/create', async (req, res) => {
 // GET /api/announcements/school/:school_id
 router.get('/school/:school_id', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb()
       .from('teacher_announcements')
       .select()
       .eq('school_id', req.params.school_id)
