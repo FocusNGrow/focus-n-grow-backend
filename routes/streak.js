@@ -100,4 +100,22 @@ router.post('/update', async (req, res) => {
   }
 });
 
+// Also handle POST /api/streak/:user_id for direct streak read
+router.get('/today/:user_id', async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    let streak = await Streak.findOne({ where: { user_id } });
+    if (!streak) {
+      streak = await Streak.create({
+        user_id,
+        current_streak: 0,
+        longest_streak: 0,
+      });
+    }
+    res.json({ status: 'success', data: streak });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
 module.exports = router;
