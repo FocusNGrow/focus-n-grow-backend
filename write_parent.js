@@ -1,4 +1,5 @@
-const express = require('express');
+const fs = require('fs');
+const content = `const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -76,4 +77,8 @@ router.post('/generate-link-code', async (req, res) => {
   } catch (e) { res.status(500).json({ status: 'error', message: e.message }); }
 });
 
-module.exports = router;
+module.exports = router;`;
+
+fs.writeFileSync('./routes/parent.js', content, 'utf8');
+const lines = content.split('\n').length;
+console.log('parent.js written successfully. Lines: ' + lines);
