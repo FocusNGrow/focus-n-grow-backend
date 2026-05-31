@@ -200,4 +200,82 @@ router.delete('/clear/:user_id', async (req, res) => {
   }
 });
 
+// POST /api/chat/generate-study-plan
+router.post('/generate-study-plan', async (req, res) => {
+  try {
+    const { user_id, name, grade_level, subjects, plan_id } = req.body;
+    const axios = require('axios');
+
+    const prompt = `You are Bella-Thalia, an AI study coach for Nigerian students.
+
+Create a 5-day weekly study plan for ${name}, a ${grade_level} student studying: ${subjects}.
+
+Return ONLY a JSON array (no other text) like this:
+[
+  {"subject": "Mathematics", "topic": "Quadratic Equations", "duration_minutes": 45, "priority": "high", "day": 1},
+  {"subject": "English", "topic": "Comprehension Practice", "duration_minutes": 30, "priority": "medium", "day": 2}
+]
+
+Create 2-3 tasks per day for 5 days (10-15 tasks total). Focus on WAEC/JAMB preparation. Match topics to Nigerian curriculum.`;
+
+    let tasks = [];
+
+    if (process.env.CLAUDE_API_KEY) {
+      const response = await axios.post(
+        'https://api.anthropic.com/v1/messages',
+        {
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1500,
+          messages: [{ role: 'user', content: prompt }]
+        },
+        {
+          headers: {
+            'x-api-key': process.env.CLAUDE_API_KEY,
+            'anthropic-version': '2023-06-01',
+            'Content-Type': 'application/json'
+          },
+          timeout: 25000
+        }
+      );
+      const text = response.data.content[0].text.trim()
+        .replace(/```json|```/g, '').trim();
+      tasks = JSON.parse(text);
+    } else {
+      // Fallback plan if no Claude API key
+      const subjectList = subjects.split(',').map(s => s.trim());
+      let day = 1;
+      for (const subject of subjectList.slice(0, 5)) {
+        tasks.push({ subject, topic: 'Revision and Practice', duration_minutes: 45, priority: 'medium', day });
+        tasks.push({ subject, topic: 'Past Questions Practice', duration_minutes: 30, priority: 'high', day });
+        day++;
+      }
+    }
+
+    // Save tasks to database
+    if (plan_id && tasks.length > 0) {
+      const StudyPlanItem = require('../models/StudyPlanItem');
+      const baseDate = new Date();
+      for (const task of tasks) {
+        const taskDate = new Date(baseDate);
+        taskDate.setDate(baseDate.getDate() + (task.day || 1) - 1);
+        await StudyPlanItem.create({
+          study_plan_id: plan_id,
+          subject: task.subject,
+          topic: task.topic,
+          duration_minutes: task.duration_minutes || 45,
+          priority: task.priority || 'medium',
+          date: taskDate,
+        });
+      }
+    }
+
+    res.json({ status: 'success',
+      message: `Generated ${tasks.length} study tasks!`,
+      data: tasks });
+  } catch (e) {
+    console.error('Study plan error:', e.message);
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
 module.exports = router;
