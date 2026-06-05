@@ -1,150 +1,206 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
+const admin = require('firebase-admin');
 const User = require('../models/User');
 
-const getTransporter = () => nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-// POST /api/notifications/weekly-report (sends email to student)
-router.post('/weekly-report', async (req, res) => {
+// Initialize Firebase Admin (if not already initialized)
+if (!admin.apps.length) {
   try {
-    const { user_id, study_hours, assignments_done, streak_days } = req.body;
-    const user = await User.findByPk(user_id,
-      { attributes: ['email', 'name'] });
-    if (!user) return res.status(404).json({ status: 'error' });
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px">
-        <div style="max-width:500px;margin:0 auto;background:#1e1e2e;
-          border-radius:16px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#6c63ff,#9c27b0);
-            padding:24px;text-align:center">
-            <h1 style="color:white;margin:0">📊 Weekly Report</h1>
-            <p style="color:rgba(255,255,255,0.8);margin:8px 0 0">
-              Focus N Grow</p>
-          </div>
-          <div style="padding:24px">
-            <p style="color:#ccc">Hi <strong style="color:white">
-              ${user.name}</strong>,</p>
-            <p style="color:#888">Here's your study summary for this week:</p>
-            <div style="display:grid;gap:12px;margin:20px 0">
-              <div style="background:#2d2d3d;border-radius:10px;padding:14px;
-                display:flex;justify-content:space-between">
-                <span style="color:#888">⏱️ Study Hours</span>
-                <strong style="color:#6c63ff">${study_hours} hrs</strong>
-              </div>
-              <div style="background:#2d2d3d;border-radius:10px;padding:14px;
-                display:flex;justify-content:space-between">
-                <span style="color:#888">✅ Assignments Done</span>
-                <strong style="color:#4caf50">${assignments_done}</strong>
-              </div>
-              <div style="background:#2d2d3d;border-radius:10px;padding:14px;
-                display:flex;justify-content:space-between">
-                <span style="color:#888">🔥 Current Streak</span>
-                <strong style="color:#ff9800">${streak_days} days</strong>
-              </div>
-            </div>
-            <div style="text-align:center;margin:20px 0">
-              <a href="https://play.google.com/store/apps/details?id=com.focusngrow.app"
-                style="background:#6c63ff;color:white;padding:12px 24px;
-                border-radius:10px;text-decoration:none;font-weight:bold">
-                Open Focus N Grow App
-              </a>
-            </div>
-            <p style="color:#666;font-size:12px;text-align:center">
-              Keep studying! Every session brings you closer to your goals.
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    await getTransporter().sendMail({
-      from: `"Focus N Grow" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: `📊 Your Weekly Study Report — ${study_hours} hours this week!`,
-      html,
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
     });
+  } catch (e) {
+    console.warn('⚠️ Firebase not configured. Push notifications disabled.');
+  }
+}
 
-    res.json({ status: 'success', message: 'Email sent' });
+// Register device token
+router.post('/register-token', async (req, res) => {
+  try {
+    const { userId, deviceToken } = req.body;
+
+    if (!userId || !deviceToken) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'userId and deviceToken required',
+      });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+    }
+
+    // Store device token
+    user.fcm_token = deviceToken;
+    await user.save();
+
+    res.json({
+      status: 'success',
+      message: 'Device token registered',
+    });
   } catch (e) {
     res.status(500).json({ status: 'error', message: e.message });
   }
 });
 
-// POST /api/notifications/parent-alert (sends email to parent)
-router.post('/parent-alert', async (req, res) => {
+// Send notification to user
+router.post('/send', async (req, res) => {
   try {
-    const { parent_email, child_name, study_hours,
-            assignments_done, mood_alert } = req.body;
+    const { userId, title, body, data } = req.body;
 
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px">
-        <div style="max-width:500px;margin:0 auto;background:#1e1e2e;
-          border-radius:16px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#4caf50,#2e7d32);
-            padding:24px;text-align:center">
-            <h1 style="color:white;margin:0">👨‍👩‍👧 Parent Update</h1>
-            <p style="color:rgba(255,255,255,0.8);margin:8px 0 0">
-              Focus N Grow — Weekly Report</p>
-          </div>
-          <div style="padding:24px">
-            <p style="color:#ccc">
-              Here is this week's study update for
-              <strong style="color:white">${child_name}</strong>:
-            </p>
-            <div style="background:#2d2d3d;border-radius:10px;padding:16px;margin:16px 0">
-              <p style="color:#4caf50;margin:0 0 8px;font-weight:bold">
-                📚 This Week's Activity</p>
-              <p style="color:#ccc;margin:4px 0">
-                Study Hours: <strong>${study_hours} hours</strong></p>
-              <p style="color:#ccc;margin:4px 0">
-                Assignments Completed: <strong>${assignments_done}</strong></p>
-            </div>
-            ${mood_alert ? `
-            <div style="background:#cf667922;border:1px solid #cf6679;
-              border-radius:10px;padding:14px;margin:16px 0">
-              <p style="color:#cf6679;margin:0;font-weight:bold">
-                ⚠️ Mood Alert</p>
-              <p style="color:#ccc;margin:8px 0 0;font-size:13px">
-                ${child_name} has been feeling overwhelmed this week.
-                Consider checking in with them about their workload.</p>
-            </div>` : ''}
-            <p style="color:#666;font-size:12px;text-align:center;margin-top:20px">
-              Monitor ${child_name}'s progress at:<br>
-              <a href="https://focus-n-grow-backend-production.up.railway.app/parent.html"
-                style="color:#4caf50">
-                focus-n-grow-backend-production.up.railway.app/parent.html
-              </a>
-            </p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    if (!userId || !title || !body) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'userId, title, and body required',
+      });
+    }
 
-    await getTransporter().sendMail({
-      from: `"Focus N Grow" <${process.env.EMAIL_USER}>`,
-      to: parent_email,
-      subject: `👨‍👩‍👧 ${child_name}'s Weekly Study Report`,
-      html,
+    const user = await User.findByPk(userId);
+    if (!user || !user.fcm_token) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User or device token not found',
+      });
+    }
+
+    const message = {
+      notification: {
+        title,
+        body,
+      },
+      data: data || {},
+      token: user.fcm_token,
+    };
+
+    const response = await admin.messaging().send(message);
+
+    res.json({
+      status: 'success',
+      message: 'Notification sent',
+      messageId: response,
     });
-
-    res.json({ status: 'success', message: 'Parent email sent' });
   } catch (e) {
     res.status(500).json({ status: 'error', message: e.message });
   }
 });
 
-module.exports = router; 
+// Send to multiple users
+router.post('/send-bulk', async (req, res) => {
+  try {
+    const { userIds, title, body, data } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || !title || !body) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'userIds (array), title, and body required',
+      });
+    }
+
+    const users = await User.findAll({
+      where: { id: userIds },
+      attributes: ['id', 'fcm_token'],
+    });
+
+    const tokens = users
+      .filter(u => u.fcm_token)
+      .map(u => u.fcm_token);
+
+    if (tokens.length === 0) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'No valid device tokens found',
+      });
+    }
+
+    const message = {
+      notification: {
+        title,
+        body,
+      },
+      data: data || {},
+    };
+
+    const response = await admin.messaging().sendMulticast({
+      ...message,
+      tokens,
+    });
+
+    res.json({
+      status: 'success',
+      message: 'Bulk notification sent',
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+    });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+// Subscribe user to topic
+router.post('/subscribe-topic', async (req, res) => {
+  try {
+    const { userId, topic } = req.body;
+
+    if (!userId || !topic) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'userId and topic required',
+      });
+    }
+
+    const user = await User.findByPk(userId);
+    if (!user || !user.fcm_token) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User or device token not found',
+      });
+    }
+
+    await admin.messaging().subscribeToTopic(user.fcm_token, topic);
+
+    res.json({
+      status: 'success',
+      message: `Subscribed to topic: ${topic}`,
+    });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+// Send to topic
+router.post('/send-topic', async (req, res) => {
+  try {
+    const { topic, title, body, data } = req.body;
+
+    if (!topic || !title || !body) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'topic, title, and body required',
+      });
+    }
+
+    const message = {
+      notification: {
+        title,
+        body,
+      },
+      data: data || {},
+      topic,
+    };
+
+    const response = await admin.messaging().send(message);
+
+    res.json({
+      status: 'success',
+      message: 'Topic notification sent',
+      messageId: response,
+    });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+module.exports = router;
+
