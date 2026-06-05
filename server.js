@@ -201,6 +201,8 @@ async function checkExpiredSubscriptions() {
 setInterval(checkExpiredSubscriptions, 24 * 60 * 60 * 1000);
 // Also run once on startup
 setTimeout(checkExpiredSubscriptions, 5000);
+// Start all scheduled jobs
+require('./cron/study_cron');
 app.listen(PORT, () => {
   console.log(`
   ╔════════════════════════════════════════╗
