@@ -212,6 +212,71 @@ async function getOrCreateSchool() {
   } catch (e) {}
 }
 
+async function loadPrincipalOverview(schoolId, token) {
+  try {
+    const res = await fetch(`/api/admin/school/${schoolId}/overview`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.status !== 'success') return;
+
+    const d = data.data;
+    document.getElementById('overview-stats').innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">👩‍🎓</div>
+          <div class="stat-value">${d.total_students || 0}</div>
+          <div class="stat-label">Total Students</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📚</div>
+          <div class="stat-value">${d.classes?.length || 0}</div>
+          <div class="stat-label">Classes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value">${d.assignments_completed || 0}</div>
+          <div class="stat-label">Assignments Done</div>
+        </div>
+        <div class="stat-card mood-${getMoodClass(d.mood_summary)}">
+          <div class="stat-icon">😊</div>
+          <div class="stat-value">${getDominantMood(d.mood_summary)}</div>
+          <div class="stat-label">School Mood</div>
+        </div>
+      </div>
+      <h3 style="color:#6c63ff;margin:20px 0 12px">Classes Overview</h3>
+      ${(d.classes || []).map(cls => `
+        <div class="class-card">
+          <div class="class-name">${cls.name} (${cls.grade_level})</div>
+          <div class="class-stats">
+            <span>👩‍🎓 ${cls.student_count || 0} students</span>
+            <span>📝 ${cls.assignment_count || 0} assignments</span>
+            <span class="mood-badge">${cls.mood_status || 'No data'}</span>
+          </div>
+        </div>`).join('')}`;
+  } catch (e) {
+    console.error('Overview error:', e);
+  }
+}
+
+function getDominantMood(moodSummary) {
+  if (!moodSummary) return 'No data';
+  const moods = Object.entries(moodSummary);
+  if (!moods.length) return 'No data';
+  const top = moods.sort((a,b) => b[1]-a[1])[0];
+  const icons = {great:'😊 Great', ok:'🙂 OK',
+    struggling:'😟 Struggling', overwhelmed:'😰 Overwhelmed'};
+  return icons[top[0]] || top[0];
+}
+
+function getMoodClass(moodSummary) {
+  if (!moodSummary) return 'neutral';
+  const moods = Object.entries(moodSummary);
+  if (!moods.length) return 'neutral';
+  const top = moods.sort((a,b) => b[1]-a[1])[0][0];
+  return top === 'great' || top === 'ok' ? 'good' : 'bad';
+}
+
 function showDashboard() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';

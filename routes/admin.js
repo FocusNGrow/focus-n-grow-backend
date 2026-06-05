@@ -85,4 +85,102 @@ router.post('/school/set-limit', async (req, res) => {
   }
 });
 
+// Enhanced principal overview with all classes detail
+router.get('/school/:school_id/full-overview', async (req, res) => {
+  try {
+    const schoolId = req.params.school_id;
+
+    const { data: school } = await sb().from('schools')
+      .select('*').eq('id', schoolId).single();
+
+    const { data: classes } = await sb().from('school_classes')
+      .select('*').eq('school_id', schoolId);
+
+    const classIds = classes?.map(c => c.id) || [];
+
+    const { data: enrollments } = classIds.length
+      ? await sb().from('school_enrollments')
+          .select('*').in('class_id', classIds)
+      : { data: [] };
+
+    const { data: assignments } = classIds.length
+      ? await sb().from('assignments')
+          .select('*').in('class_id', classIds)
+      : { data: [] };
+
+    const { data: completions } = await sb()
+      .from('assignment_completions')
+      .select('*, assignments(class_id)')
+      .in('assignments.class_id', classIds)
+      .eq('completed', true);
+
+    const { data: moods } = await sb()
+      .from('school_mood_logs')
+      .select('*').eq('school_id', schoolId)
+      .gte('logged_at',
+        new Date(Date.now()-7*24*60*60*1000).toISOString());
+
+    // Build per-class stats
+    const classStats = (classes || []).map(cls => {
+      const classEnroll = enrollments?.filter(
+        e => e.class_id === cls.id) || [];
+      const classAssign = assignments?.filter(
+        a => a.class_id === cls.id) || [];
+      const classMoods = moods?.filter(
+        m => m.class_id === cls.id) || [];
+
+      const moodCounts = {great:0,ok:0,struggling:0,overwhelmed:0};
+      classMoods.forEach(m => {
+        if (moodCounts[m.mood] !== undefined) moodCounts[m.mood]++;
+      });
+
+      const totalMoods = Object.values(moodCounts)
+        .reduce((a,b) => a+b, 0);
+      const atRisk = moodCounts.struggling + moodCounts.overwhelmed;
+      const moodStatus = totalMoods === 0 ? 'No data'
+        : atRisk / totalMoods > 0.4 ? 'Needs attention'
+        : '✓ Positive';
+
+      return {
+        ...cls,
+        student_count: classEnroll.length,
+        assignment_count: classAssign.length,
+        mood_summary: moodCounts,
+        mood_status: moodStatus,
+        at_risk_students: atRisk,
+      };
+    });
+
+    // Students not studied this week
+    const allStudentIds = enrollments?.map(e =>
+      e.student_user_id) || [];
+    const { data: streaks } = await sb()
+      .from('streaks')
+      .select('*')
+      .in('user_id', allStudentIds)
+      .lt('last_study_date',
+        new Date(Date.now()-2*24*60*60*1000)
+          .toISOString().substring(0,10));
+
+    res.json({
+      status: 'success',
+      data: {
+        school,
+        total_students: enrollments?.length || 0,
+        total_classes: classes?.length || 0,
+        total_assignments: assignments?.length || 0,
+        assignments_completed: completions?.length || 0,
+        students_not_studying: streaks?.length || 0,
+        mood_summary: moods?.reduce((acc, m) => {
+          acc[m.mood] = (acc[m.mood] || 0) + 1;
+          return acc;
+        }, {}),
+        classes: classStats,
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
 module.exports = router;
