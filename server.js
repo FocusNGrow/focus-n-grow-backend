@@ -96,6 +96,7 @@ app.use('/api/payment',        palmPayRoutes);
 app.use('/api/airtime',        airtimeRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/admin',   adminRoutes);
+app.use('/api/study-complete', require('./routes/study_complete'));
 // Super admin stats endpoint
 app.get('/api/superadmin/stats', async (req, res) => {
   try {
