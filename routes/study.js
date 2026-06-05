@@ -143,4 +143,46 @@ router.get('/tasks/today/:plan_id', async (req, res) => {
   }
 });
 
+// Get plans by user_id (this was missing)
+router.get('/plans/user/:user_id', async (req, res) => {
+  try {
+    const plans = await StudyPlan.findAll({
+      where: { user_id: req.params.user_id },
+      order: [['createdAt', 'DESC']],
+    });
+    res.json({ status: 'success', data: plans });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+// Get plan with its items
+router.get('/plans/:plan_id/items', async (req, res) => {
+  try {
+    const plan = await StudyPlan.findByPk(req.params.plan_id);
+    if (!plan) return res.status(404)
+      .json({ status: 'error', message: 'Plan not found' });
+    const items = await StudyPlanItem.findAll({
+      where: { study_plan_id: req.params.plan_id },
+      order: [['date', 'ASC']],
+    });
+    res.json({ status: 'success', data: plan, items });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+// Mark item complete
+router.put('/items/:item_id/complete', async (req, res) => {
+  try {
+    const item = await StudyPlanItem.findByPk(req.params.item_id);
+    if (!item) return res.status(404)
+      .json({ status: 'error', message: 'Item not found' });
+    await item.update({ completed: true, completed_at: new Date() });
+    res.json({ status: 'success', data: item });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
 module.exports = router;
